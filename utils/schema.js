@@ -44,9 +44,55 @@ var UsersModelSchema = new Schema({
 const UsersModel = mongoose.model('Users', UsersModelSchema);
 new UsersModel()
 
+// tasks
+var TasksModelSchema = new Schema({
+  title: String,
+  body: String,
+  status: String,
+  total: Number,
+  complete: Number,
+  expired: Date,
+  receivers: Array,
+  updated_at: Date,
+  created_at: Date
+});
+const TasksModel = mongoose.model('Tasks', TasksModelSchema);
+new TasksModel()
+
+
+// orgs
+var OrgsModelSchema = new Schema({
+  title: String,
+  body: String,
+  status: String,
+  total: Number,
+  complete: Number,
+  expired: Date,
+  receivers: Array,
+  updated_at: Date,
+  created_at: Date
+});
+const OrgsModel = mongoose.model('Orgs', OrgsModelSchema);
+new OrgsModel()
+
+
+// flatpages
+var FlatpagesModelSchema = new Schema({
+  title: String,
+  slug: String,
+  body: String,
+  updated_at: Date,
+  created_at: Date
+});
+const FlatpagesModel = mongoose.model('Flatpages', FlatpagesModelSchema);
+new FlatpagesModel()
+
 export {
   BlogsModel,
   QuestionsModel,
   PhotosModel,
-  UsersModel
+  UsersModel,
+  TasksModel,
+  OrgsModel,
+  FlatpagesModel
 }

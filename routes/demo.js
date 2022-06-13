@@ -1,9 +1,6 @@
 var express = require('express');
 var router = express.Router();
 import { UsersModel } from './../utils/schema'
-// 增删改查
-// 用户名唯一
-// 加密密码
 router.get('/api/users', async (req, res, next) => {
   const limit = req.query.limit || 10
   const offset = req.query.offset || 0
