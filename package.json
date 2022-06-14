@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
+    "template":"node template/create.js",
     "start": "nodemon --exec babel-node ./bin/www"
   },
   "dependencies": {

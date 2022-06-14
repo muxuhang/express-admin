@@ -20,7 +20,6 @@ var QuestionsModelSchema = new Schema({
 const QuestionsModel = mongoose.model('Questions', QuestionsModelSchema);
 new QuestionsModel()
 
-
 // photos
 var PhotosModelSchema = new Schema({
   title: String,
@@ -59,7 +58,6 @@ var TasksModelSchema = new Schema({
 const TasksModel = mongoose.model('Tasks', TasksModelSchema);
 new TasksModel()
 
-
 // orgs
 var OrgsModelSchema = new Schema({
   title: String,
@@ -75,7 +73,6 @@ var OrgsModelSchema = new Schema({
 const OrgsModel = mongoose.model('Orgs', OrgsModelSchema);
 new OrgsModel()
 
-
 // flatpages
 var FlatpagesModelSchema = new Schema({
   title: String,
@@ -87,6 +84,15 @@ var FlatpagesModelSchema = new Schema({
 const FlatpagesModel = mongoose.model('Flatpages', FlatpagesModelSchema);
 new FlatpagesModel()
 
+// test
+var TestModelSchema = new Schema({
+  title: String,
+  updated_at: Date,
+  created_at: Date
+});
+const TestModel = mongoose.model('Test', TestModelSchema);
+new TestModel()
+
 export {
   BlogsModel,
   QuestionsModel,
@@ -94,5 +100,7 @@ export {
   UsersModel,
   TasksModel,
   OrgsModel,
-  FlatpagesModel
+  FlatpagesModel,
+  TestModel,
+  // insert
 }
