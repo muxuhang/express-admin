@@ -1,9 +1,8 @@
 var express = require('express');
 var router = express.Router();
-import auth from '../utils/auth';
 import { QuestionsModel } from '../utils/schema'
 // 试题
-router.get('/questions',auth, async (req, res, next) => {
+router.get('/api/questions', async (req, res, next) => {
   const limit = req.query.limit || 10
   const offset = req.query.offset || 0
   const count = await QuestionsModel.find().count()
@@ -15,7 +14,7 @@ router.get('/questions',auth, async (req, res, next) => {
   }).sort({ created_at: -1 }).skip(offset).limit(limit)
 })
 // 单个试题
-router.get('/question', (req, res, next) => {
+router.get('/api/question', (req, res, next) => {
   QuestionsModel.findById(req.body.id,
     (err, result) => {
       res.send(err || result)
@@ -23,7 +22,7 @@ router.get('/question', (req, res, next) => {
   );
 })
 // 增
-router.post('/questions', (req, res, next) => {
+router.post('/api/questions', (req, res, next) => {
   const created_at = new Date()
   QuestionsModel.create({
     ...req.body,
@@ -35,7 +34,7 @@ router.post('/questions', (req, res, next) => {
   );
 })
 // 删
-router.delete('/questions', (req, res, next) => {
+router.delete('/api/questions', (req, res, next) => {
   QuestionsModel.deleteOne({ _id: req.body.id },
     (err, result) => {
       res.send(err || result)
@@ -43,7 +42,7 @@ router.delete('/questions', (req, res, next) => {
   );
 })
 // 改
-router.post('/questions/update', (req, res, next) => {
+router.post('/api/questions/update', (req, res, next) => {
   QuestionsModel.updateOne({ _id: req.body._id }, req.body,
     (err, result) => {
       res.send(err || result)
