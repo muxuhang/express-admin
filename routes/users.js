@@ -2,6 +2,9 @@ var express = require('express');
 var router = express.Router();
 import { check, validationResult } from 'express-validator';
 import { UsersModel } from './../utils/schema'
+import auth from "../utils/auth";
+import bcrypt from "bcrypt";
+
 // 增删改查
 // 用户名唯一
 // 用户名不能为空
@@ -11,7 +14,7 @@ const validaties = [
   check('telphone').isMobilePhone().withMessage('请输入正确的手机号'),
   check('email').isEmail().withMessage('请输入正确的邮箱'),
 ]
-router.get('/api/users', async (req, res, next) => {
+router.get('/api/users', auth, async (req, res, next) => {
   const limit = req.query.limit || 10
   const offset = req.query.offset || 0
   const search = req.query.search || ''
@@ -31,7 +34,7 @@ router.get('/api/users', async (req, res, next) => {
   }).sort({ created_at: -1 }).skip(offset).limit(limit)
 })
 // 单
-router.get('/api/users/:id', (req, res, next) => {
+router.get('/api/users/:id', auth, (req, res, next) => {
   UsersModel.findById(req.params.id,
     (err, result) => {
       res.send(err || result)
@@ -40,10 +43,10 @@ router.get('/api/users/:id', (req, res, next) => {
 })
 // 增
 router.post('/api/users', [
+  auth,
   ...validaties
 ], async (req, res, next) => {
   var errors = validationResult(req);
-  console.log(errors.isEmpty());
   if (!errors.isEmpty()) {
     res.send({ message: errors.errors[0].msg })
   } else {
@@ -53,8 +56,10 @@ router.post('/api/users', [
       res.send({ message: '用户名已存在' })
     } else {
       const created_at = new Date()
+      const password = bcrypt.hashSync(req.body.password || 'admin12345', 10)
       UsersModel.create({
         ...req.body,
+        password: password,
         created_at: created_at,
         updated_at: created_at
       },
@@ -66,7 +71,7 @@ router.post('/api/users', [
   }
 })
 // 删
-router.delete('/api/users', (req, res, next) => {
+router.delete('/api/users', auth, (req, res, next) => {
   const ids = req.body.ids.split(',')
   UsersModel.deleteMany({ _id: { $in: ids } },
     (err, result) => {
@@ -75,7 +80,7 @@ router.delete('/api/users', (req, res, next) => {
   );
 })
 // 改
-router.patch('/api/users/:id', (req, res, next) => {
+router.patch('/api/users/:id', auth, (req, res, next) => {
   const updated_at = new Date()
   UsersModel.updateOne({ _id: req.params.id }, {
     ...req.body,
