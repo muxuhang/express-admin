@@ -9,15 +9,14 @@ import { jwtSign } from '../utils/jwt';
 // 密码加密
 // 返回access
 router.post('/api/login', async (req, res, next) => {
-  if (!req.body.username) res.send({ message: '请输入用户名' })
-  if (!req.body.password) res.send({ message: '请输入登录密码' })
+  if (!req.body.username) res.status(400).send({ message: '请输入用户名' })
+  if (!req.body.password) res.status(400).send({ message: '请输入登录密码' })
   const count = await UsersModel.find({ username: { $eq: req.body.username } }).count()
-  if (count < 1) res.send({ message: '账号不存在' })
+  if (count < 1) res.status(400).send({ message: '账号不存在' })
   else {
     UsersModel.find({ username: { $eq: req.body.username } }, (err, result) => {
-      console.log(err, result);
       if (err) {
-        res.send(err)
+        res.status(400).send(err)
       } else {
         bcrypt.compare(
           req.body.password,
@@ -27,7 +26,7 @@ router.post('/api/login', async (req, res, next) => {
             const token = jwtSign({ id: result[0]._id })
             res.send({ access: token })
           } else {
-            res.send({ message: '密码错误' })
+            res.status(400).send({ message: '密码错误' })
           }
         });
       }

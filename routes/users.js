@@ -4,6 +4,7 @@ import { check, validationResult } from 'express-validator';
 import { UsersModel } from './../utils/schema'
 import auth from "../utils/auth";
 import bcrypt from "bcrypt";
+import premissions from '../utils/Permissions';
 
 // 增删改查
 // 用户名唯一
@@ -43,7 +44,7 @@ router.get('/api/users/:id', auth, (req, res, next) => {
 })
 // 增
 router.post('/api/users', [
-  auth,
+  [auth, premissions],
   ...validaties
 ], async (req, res, next) => {
   var errors = validationResult(req);
@@ -71,7 +72,7 @@ router.post('/api/users', [
   }
 })
 // 删
-router.delete('/api/users', auth, (req, res, next) => {
+router.delete('/api/users', [auth, premissions], (req, res, next) => {
   const ids = req.body.ids.split(',')
   UsersModel.deleteMany({ _id: { $in: ids } },
     (err, result) => {
@@ -80,16 +81,17 @@ router.delete('/api/users', auth, (req, res, next) => {
   );
 })
 // 改
-router.patch('/api/users/:id', auth, (req, res, next) => {
+router.patch('/api/users/:id', [auth, premissions], (req, res, next) => {
   const updated_at = new Date()
-  UsersModel.updateOne({ _id: req.params.id }, {
-    ...req.body,
-    updated_at: updated_at
-  },
-    (err, result) => {
-      res.send(err || result)
-    }
-  );
+  res.status(400)
+  // UsersModel.updateOne({ _id: req.params.id }, {
+  //   ...req.body,
+  //   updated_at: updated_at
+  // },
+  //   (err, result) => {
+  //     res.send(err || result)
+  //   }
+  // );
 })
 
 module.exports = router;
