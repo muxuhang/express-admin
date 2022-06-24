@@ -33,9 +33,9 @@ routerList.map((item) => {
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
-  next(createError(404));
+  res.render(req.path.substring(1));
+  // next(createError(404));
 });
-
 // error handler
 app.use(function (err, req, res, next) {
   res.locals.message = err.message;
@@ -43,9 +43,8 @@ app.use(function (err, req, res, next) {
   console.log('------Error begin------');
   console.log(err.status, err);
   console.log('------Error end------');
-  // render the error page
   res.status(err.status || 500);
-  res.render('error');
+  res.render('404.html')
 });
 
 module.exports = app;
