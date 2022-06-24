@@ -4,7 +4,7 @@ import { check, validationResult } from 'express-validator';
 import { UsersModel } from './../utils/schema'
 import auth from "../utils/auth";
 import bcrypt from "bcrypt";
-import premissions from '../utils/Permissions';
+import premissions from '../utils/permissions';
 
 // 增删改查
 // 用户名唯一
