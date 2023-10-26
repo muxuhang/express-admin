@@ -7,7 +7,7 @@ services:
     ports:
       - 27017:27017
     volumes:
-      - ./db:/data/db
+      - ./db2:/data/db
     environment:
       TZ: Asia/Shanghai
       MONGO_INITDB_ROOT_USERNAME: root
@@ -15,7 +15,9 @@ services:
 
   mongo-express:
     image: mongo-express
-    #restart: always
+    depends_on:
+      - mongo
+    #restart: alwaysx
     ports:
       - 8081:8081
     environment:
