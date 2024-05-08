@@ -1,50 +1,55 @@
-import createError from 'http-errors'
 import express from 'express'
 import path from 'path'
 import cookieParser from 'cookie-parser'
 import logger from 'morgan'
-require('dotenv').config()
+import bodyParser from 'body-parser'
+import cors from 'cors'
+import { configDotenv } from 'dotenv'
+import ejs from 'ejs'
 import './mongodb'
 import './utils/schema'
-import bodyParser from 'body-parser'
-const cors = require('cors');
 
-var app = express();
-var ejs = require('ejs')
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'html');
-app.engine('html', ejs.renderFile);
+// 环境配置
+configDotenv()
+var app = express()
 
+// 视图配置
+app.set('views', path.join(__dirname, 'views'))
+app.set('view engine', 'ejs')
+app.engine('html', ejs.renderFile)
 
-app.use(logger('dev'));
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+// 中间件配置
+app.use(logger('dev'))
+app.use(express.json())
+app.use(express.urlencoded({ extended: false }))
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
-app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
-app.use(cors());
-// ----------------api begin------------------  //
+app.use(cookieParser())
+
+// 明确指定静态文件目录
+app.use(express.static(path.join(__dirname, 'public'), { maxAge: 31536000 }))
+app.use(cors())
+
+// 路由配置
 const routerList = require('./routes/index')
 routerList.map((item) => {
-  app.use('/', item);
+  app.use('/', item)
 })
-// ----------------api end------------------  //
 
-// catch 404 and forward to error handler
+// 404错误处理
 app.use(function (req, res, next) {
-  res.render(req.path.substring(1));
-  // next(createError(404));
-});
-// error handler
-app.use(function (err, req, res, next) {
-  res.locals.message = err.message;
-  res.locals.error = req.app.get('env') === 'development' ? err : {};
-  console.log('------Error begin------');
-  console.log(err.status, err);
-  console.log('------Error end------');
-  res.status(err.status || 500);
-  res.render('404.html')
-});
+  const pageNotFoundView = path.join(app.get('views'), '404.html')
+  res.status(404).render(pageNotFoundView)
+})
 
-module.exports = app;
+// 错误处理
+app.use(function (err, req, res, next) {
+  res.locals.message = err.message
+  res.locals.error = req.app.get('env') === 'development' ? err : {}
+  console.error('------Error begin------')
+  console.error(err.status, err)
+  console.error('------Error end------')
+  res.status(err.status || 500).render('error') // 使用通用错误页面模板
+})
+
+module.exports = app
