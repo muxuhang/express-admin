@@ -1,10 +1,11 @@
-// const { MongoClient } = require("mongodb");
 import mongoose from 'mongoose'
 import { configDotenv } from 'dotenv'
+
 configDotenv()
 const url = process.env.MONGODB_URI
 const username = process.env.USERNAME
 const passwork = process.env.PASSWORD
+
 if (!url) {
   console.log('MongoDB URL 未配置')
   process.exit(1)
