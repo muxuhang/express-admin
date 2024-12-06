@@ -1,3 +1,3 @@
 <template>
-  <div>teacher</div>
+  <div>234</div>
 </template>

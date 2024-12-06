@@ -37,7 +37,7 @@ app.use(express.static(path.join(__dirname, 'views'), { maxAge: 31536000 }))
 app.use(cors())
 
 // 捕获所有未找到的路由，并返回 Vue 应用程序的入口文件
-app.get('*', (req, res) => {
+app.get("*", (req, res) => {
   res.sendFile(path.resolve(__dirname, 'views', 'index.html'))
 })
 

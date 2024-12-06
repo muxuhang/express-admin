@@ -1,7 +1,8 @@
-import { createRouter, createWebHashHistory } from 'vue-router'
+import { createRouter, createWebHashHistory, createWebHistory } from 'vue-router'
 import Home from '@/pages/Home' // 首页
 import Login from '@/pages/Login' // 登录
 import Users from '@/pages/Users' // 用户
+import Faculties from '@/pages/Faculties'
 import Student from '@/pages/Users/Student' // 用户
 import Teacher from '@/pages/Users/Teacher' // 用户
 import NotFound from '@/pages/NotFound' // 404
@@ -13,13 +14,17 @@ const routes = [
     component: Home,
   },
   {
+    path: '/faculties',
+    name: 'faculties',
+    component: Faculties,
+  },
+  {
     path: '/login',
     name: 'Login',
     component: Login,
   },
   {
     path: '/users/:id',
-    name: 'Users',
     component: Users,
     children: [
       {

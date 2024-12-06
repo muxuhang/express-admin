@@ -1,3 +1,6 @@
 <template>
-  <div>users</div>
+  <div>
+    users
+    <router-view> </router-view>
+  </div>
 </template>
