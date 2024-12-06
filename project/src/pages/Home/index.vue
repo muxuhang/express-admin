@@ -1,6 +1,10 @@
 <template>
   <div class="home-page">
-    <a-button>1234</a-button>
+    <page-header
+      title="首页"
+      subtitle="控制面板" />
   </div>
 </template>
-<script></script>
+<script setup>
+  import PageHeader from '@/components/PageHeader'
+</script>
