@@ -22,10 +22,10 @@
 1. **后端**：
 
    1. npm install || yarn
-   2. docker-compose up
+   2. docker compose up || docker-compose up
    3. npm run start
 
 2. **前端**：
-   1. cd project-frontend
+   1. cd project
    2. npm install || yarn
    3. npm run dev

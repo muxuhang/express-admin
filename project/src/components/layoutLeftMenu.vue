@@ -51,6 +51,7 @@
   const selectKey = ref(router.currentRoute.value.path)
   // 监听路由变化以更新选中状态
   router.isReady().then(() => {
+    console.log(router.currentRoute.value.path)
     selectKey.value = router.currentRoute.value.path
   })
   const onClickMenuItem = (e) => {
@@ -61,13 +62,3 @@
     console.log(e)
   }
 </script>
-<style>
-  .layout-left-menu a {
-    display: block;
-  }
-  .arco-menu-dark .arco-menu-inline-header.arco-menu-selected,
-  .arco-menu-dark .arco-menu-inline-header.arco-menu-selected .arco-icon,
-  .arco-menu-dark .arco-menu-inline-header.arco-menu-selected .arco-menu-icon {
-    color: #fff;
-  }
-</style>
