@@ -1,0 +1,5 @@
+[
+  { "name": "男", "code": "male" },
+  { "name": "女", "code": "female" },
+  { "name": "保密", "code": "other" }
+]

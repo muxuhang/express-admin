@@ -1,97 +1,146 @@
-var express = require('express');
-var router = express.Router();
-import { check, validationResult } from 'express-validator';
-import { UsersModel } from './../utils/schema'
-import auth from "../utils/auth";
-import bcrypt from "bcrypt";
-import premissions from '../utils/permissions';
+import express from 'express'
+import User from '../models/user.js'
+import { checkPermissions } from '../middleware/auth.js'
 
-// 增删改查
-// 用户名唯一
-// 用户名不能为空
-// 加密密码
-const validaties = [
-  check('username').isLength({ min: 1 }).withMessage('请输入用户名'),
-  check('telphone').isMobilePhone().withMessage('请输入正确的手机号'),
-  check('email').isEmail().withMessage('请输入正确的邮箱'),
-]
-router.get('/api/users', auth, async (req, res, next) => {
-  const limit = req.query.limit || 10
-  const offset = req.query.offset || 0
-  const search = req.query.search || ''
-  const count = await UsersModel.find().count()
-  UsersModel.find({
-    $or: [
-      { username: { $regex: search } },
-      { nickname: { $regex: search } },
-      { telphone: { $regex: search } },
-      { email: { $regex: search } }
-    ]
-  }, (err, result) => {
-    res.send(err || {
-      count: count,
-      results: result
-    })
-  }).sort({ created_at: -1 }).skip(offset).limit(limit)
-})
-// 单
-router.get('/api/users/:id', auth, (req, res, next) => {
-  UsersModel.findById(req.params.id,
-    (err, result) => {
-      res.send(err || result)
-    }
-  );
-})
-// 增
-router.post('/api/users', [
-  [auth, premissions],
-  ...validaties
-], async (req, res, next) => {
-  var errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    res.send({ message: errors.errors[0].msg })
-  } else {
-    const username = req.body.username
-    const count = await UsersModel.find({ username: username }).count()
-    if (count) {
-      res.send({ message: '用户名已存在' })
-    } else {
-      const created_at = new Date()
-      const password = bcrypt.hashSync(req.body.password || 'admin12345', 10)
-      UsersModel.create({
-        ...req.body,
-        password: password,
-        created_at: created_at,
-        updated_at: created_at
-      },
-        (err, result) => {
-          res.send(err || result)
+const router = express.Router()
+
+// Get all users
+router.get('/api/users', checkPermissions(['view_users']), async (req, res) => {
+  try {
+    console.log('User',User)
+    const { keyword } = req.query
+    const query = keyword
+      ? {
+          $or: [
+            { username: new RegExp(keyword, 'i') },
+            { email: new RegExp(keyword, 'i') }
+          ]
         }
-      );
-    }
+      : {}
+
+    const total = await User.countDocuments(query)
+    const users = await User.find(query)
+
+    res.json({
+      code: 0,
+      message: '获取用户列表成功',
+      data: {
+        total,
+        users
+      }
+    })
+  } catch (error) {
+    res.status(500).json({
+      code: 500,
+      message: '获取用户列表失败',
+      error: error.message
+    })
   }
 })
-// 删
-router.delete('/api/users', [auth, premissions], (req, res, next) => {
-  const ids = req.body.ids.split(',')
-  UsersModel.deleteMany({ _id: { $in: ids } },
-    (err, result) => {
-      res.send(err || result)
+
+// Get user by ID
+router.get('/api/users/:id', async (req, res) => {
+  try {
+    const { id } = req.params
+    const user = await User.findById(id, { password: 0 })
+    if (!user) {
+      return res.status(404).json({
+        code: 404,
+        message: '用户不存在'
+      })
     }
-  );
-})
-// 改
-router.patch('/api/users/:id', [auth, premissions], (req, res, next) => {
-  const updated_at = new Date()
-  res.status(400)
-  // UsersModel.updateOne({ _id: req.params.id }, {
-  //   ...req.body,
-  //   updated_at: updated_at
-  // },
-  //   (err, result) => {
-  //     res.send(err || result)
-  //   }
-  // );
+
+    res.json({
+      code: 0,
+      message: '获取用户信息成功',
+      data: user
+    })
+  } catch (error) {
+    res.status(500).json({
+      code: 500,
+      message: '获取用户信息失败',
+      error: error.message
+    })
+  }
 })
 
-module.exports = router;
+// Create new user
+router.post('/api/users', checkPermissions(['create_user']), async (req, res) => {
+  try {
+    const userData = req.body
+    const user = new User(userData)
+    await user.save()
+
+    res.json({
+      code: 0,
+      message: '创建用户成功',
+      data: { ...user.toObject(), password: undefined }
+    })
+  } catch (error) {
+    res.status(500).json({
+      code: 500,
+      message: '创建用户失败',
+      error: error.message
+    })
+  }
+})
+
+// Update user
+router.put('/api/users/:id', checkPermissions(['edit_user']), async (req, res) => {
+  try {
+    const { id } = req.params
+    const userData = req.body
+
+    const user = await User.findById(id)
+    if (!user) {
+      return res.status(404).json({
+        code: 404,
+        message: '用户不存在'
+      })
+    }
+
+    Object.assign(user, userData)
+    await user.save()
+
+    res.json({
+      code: 0,
+      message: '更新用户成功',
+      data: { ...user.toObject(), password: undefined }
+    })
+  } catch (error) {
+    res.status(500).json({
+      code: 500,
+      message: '更新用户失败',
+      error: error.message
+    })
+  }
+})
+
+// Delete user
+router.delete('/api/users/:id', checkPermissions(['delete_user']), async (req, res) => {
+  try {
+    const { id } = req.params
+    const user = await User.findById(id)
+    if (!user) {
+      return res.status(404).json({
+        code: 404,
+        message: '用户不存在'
+      })
+    }
+
+    await user.deleteOne()
+
+    res.json({
+      code: 0,
+      message: '删除用户成功'
+    })
+  } catch (error) {
+    res.status(500).json({
+      code: 500,
+      message: '删除用户失败',
+      error: error.message
+    })
+  }
+})
+
+export default router

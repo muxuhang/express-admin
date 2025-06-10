@@ -1,1 +1,238 @@
-<!DOCTYPE html><html lang=""><head><meta charset="utf-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" href="favicon.ico"><title>project</title><link href="css/app.b149faa4.css" rel="preload" as="style"><link href="css/chunk-vendors.2c5edc6f.css" rel="preload" as="style"><link href="js/app.4e0c4713.js" rel="preload" as="script"><link href="js/chunk-vendors.452aa45b.js" rel="preload" as="script"><link href="css/chunk-vendors.2c5edc6f.css" rel="stylesheet"><link href="css/app.b149faa4.css" rel="stylesheet"></head><body><noscript><strong>We're sorry but project doesn't work properly without JavaScript enabled. Please enable it to continue.</strong></noscript><div id="app"></div><script src="js/chunk-vendors.452aa45b.js"></script><script src="js/app.4e0c4713.js"></script></body></html>
+<!DOCTYPE html>
+<html lang="zh">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0" />
+    <title>API Documentation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  </head>
+  <body class="bg-gray-50 p-8">
+    <div class="max-w-7xl mx-auto">
+      <!-- 登录表单 -->
+      <div id="loginForm" class="w-96 mx-auto mb-8 bg-white rounded-lg shadow p-6">
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">登录</h2>
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700">用户名</label>
+            <input type="text" id="username" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">密码</label>
+            <input type="password" id="password" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+          </div>
+          <button id="loginBtn" class="w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+            登录
+          </button>
+        </div>
+      </div>
+
+      <!-- API 文档部分 -->
+      <div id="apiDoc" class="hidden">
+        <h2 class="text-3xl font-bold text-gray-800 mb-6">接口API文档</h2>
+        <div class="bg-white rounded-lg shadow overflow-hidden">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">方法</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">路径</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">描述</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">默认参数</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200" id="apiTableBody">
+              <!-- 表格内容将通过 JavaScript 动态生成 -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- 响应结果展示区域 -->
+        <div
+          id="response"
+          class="mt-8 bg-white rounded-lg shadow p-6 hidden">
+          <h3 class="text-lg font-medium text-gray-900 mb-4">响应结果</h3>
+          <pre
+            id="responseContent"
+            class="bg-gray-50 p-4 rounded-lg overflow-x-auto"></pre>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // 存储 token
+      let token = localStorage.getItem('token');
+
+      // 检查登录状态
+      function checkLoginStatus() {
+        if (token) {
+          document.getElementById('loginForm').classList.add('hidden');
+          document.getElementById('apiDoc').classList.remove('hidden');
+        } else {
+          document.getElementById('loginForm').classList.remove('hidden');
+          document.getElementById('apiDoc').classList.add('hidden');
+        }
+      }
+
+      // 登录函数
+      async function login() {
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+
+        try {
+          const response = await axios.post('/api/login', {
+            username,
+            password
+          });
+
+          if (response.data.code === 0) {
+            token = response.data.data.token;
+            localStorage.setItem('token', token);
+            checkLoginStatus();
+          } else {
+            alert(response.data.message);
+          }
+        } catch (error) {
+          alert(error.response?.data?.message || '登录失败');
+        }
+      }
+
+      // API 接口数据
+      const apiList = [
+        {
+          method: 'GET',
+          path: '/api/users',
+          description: '获取用户列表',
+          params: [
+            { name: 'page', value: 1, type: 'number' },
+            { name: 'limit', value: 10, type: 'number' }
+          ],
+          color: 'green'
+        },
+        {
+          method: 'POST',
+          path: '/api/users',
+          description: '创建新用户',
+          params: [
+            { name: 'username', value: 'test', type: 'string' },
+            { name: 'password', value: '123456', type: 'string' }
+          ],
+          color: 'blue'
+        },
+        {
+          method: 'PUT',
+          path: '/api/users/:id',
+          description: '更新指定用户信息',
+          params: [
+            { name: 'id', value: 1, type: 'number' },
+            { name: 'username', value: 'updated', type: 'string', optional: true }
+          ],
+          color: 'yellow'
+        },
+        {
+          method: 'DELETE',
+          path: '/api/users/:id',
+          description: '删除指定用户',
+          params: [
+            { name: 'id', value: 1, type: 'number' }
+          ],
+          color: 'red'
+        }
+      ];
+
+      // 渲染表格内容
+      function renderTable() {
+        const tbody = document.getElementById('apiTableBody');
+        tbody.innerHTML = apiList.map((api, index) => {
+          const paramsHtml = api.params.map(param => 
+            `<code class="bg-gray-100 px-2 py-1 rounded ${param.optional ? 'ml-2' : ''}">${param.name}: ${param.type}${param.optional ? '?' : ''}</code>`
+          ).join(' ');
+
+          return `
+            <tr class="hover:bg-gray-50">
+              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-${api.color}-600">${api.method}</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${api.path}</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${api.description}</td>
+              <td class="px-6 py-4 text-sm text-gray-500">
+                ${paramsHtml}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <button
+                  data-api-index="${index}"
+                  class="send-request-btn bg-${api.color}-500 hover:bg-${api.color}-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+                  发送请求
+                </button>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      // 发送请求函数
+      async function sendRequest(method, url, data = null) {
+        const responseDiv = document.getElementById('response')
+        const responseContent = document.getElementById('responseContent')
+
+        try {
+          responseDiv.classList.remove('hidden')
+          responseContent.textContent = '请求中...'
+
+          const config = {
+            method: method,
+            url: url,
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+          }
+
+          if (data && (method === 'POST' || method === 'PUT')) {
+            config.data = data
+          } else if (data && method === 'GET') {
+            config.params = data
+          }
+
+          const response = await axios(config)
+          responseContent.textContent = JSON.stringify(response.data, null, 2)
+        } catch (error) {
+          if (error.response?.status === 401) {
+            // token 过期，清除登录状态
+            localStorage.removeItem('token');
+            token = null;
+            checkLoginStatus();
+          }
+          responseContent.textContent = `错误: ${error.message}\n${
+            error.response ? JSON.stringify(error.response.data, null, 2) : ''
+          }`
+        }
+      }
+
+      // 处理按钮点击事件
+      function handleButtonClick(event) {
+        const button = event.target.closest('.send-request-btn');
+        if (!button) return;
+
+        const apiIndex = button.dataset.apiIndex;
+        const api = apiList[apiIndex];
+        
+        const requestData = api.params.reduce((acc, param) => {
+          acc[param.name] = param.value;
+          return acc;
+        }, {});
+
+        const url = api.path.replace(':id', '1');
+        sendRequest(api.method, url, requestData);
+      }
+
+      // 页面加载时初始化
+      document.addEventListener('DOMContentLoaded', () => {
+        checkLoginStatus();
+        renderTable();
+        document.getElementById('apiTableBody').addEventListener('click', handleButtonClick);
+        document.getElementById('loginBtn').addEventListener('click', login);
+      });
+    </script>
+  </body>
+</html>
