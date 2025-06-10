@@ -3,8 +3,10 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "template": "node template/create.js",
-    "start": "nodemon --exec babel-node ./bin/www"
+    "start": "nodemon --exec babel-node ./bin/www",
+    "lint": "eslint .",
+    "test": "jest",
+    "create-admin": "babel-node scripts/createAdmin.js"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",
@@ -14,19 +16,21 @@
     "debug": "~2.6.9",
     "dotenv": "^16.4.5",
     "ejs": "^3.1.6",
-    "express": "~4.16.1",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0",
     "express-validator": "^6.14.1",
-    "fs": "^0.0.1-security",
+    "helmet": "^8.1.0",
     "http-errors": "~1.6.3",
-    "jsonwebtoken": "^8.5.1",
+    "jsonwebtoken": "^9.0.2",
     "morgan": "~1.9.1",
-    "nodemon": "^2.0.15"
+    "nodemailer": "^7.0.3",
+    "nodemon": "^3.1.10",
+    "web-push": "^3.6.7"
   },
   "devDependencies": {
     "@babel/core": "^7.17.9",
     "@babel/node": "^7.16.8",
     "@babel/preset-env": "^7.16.11",
-    "babel-core": "^6.26.3",
     "cors": "^2.8.5",
     "mongoose": "^6.3.0"
   }

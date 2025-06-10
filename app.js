@@ -1,17 +1,35 @@
+import dotenv from 'dotenv'
+dotenv.config()
+
 import express from 'express'
 import path from 'path'
 import cookieParser from 'cookie-parser'
 import logger from 'morgan'
 import bodyParser from 'body-parser'
 import cors from 'cors'
-import { configDotenv } from 'dotenv'
 import ejs from 'ejs'
 import './mongodb'
-import './utils/schema'
+import routerList from './routes/index.js'
+import handleError, { AppError } from './middleware/handleError'
+import initDefaultRoles from './function/initDefaultRoles.js'
+import helmet from 'helmet'
+import rateLimit from 'express-rate-limit'
 
-// 环境配置
-configDotenv()
 var app = express()
+
+// 执行初始化
+initDefaultRoles()
+
+// 安全相关中间件
+app.use(helmet()) // 添加安全头
+app.use(cors()) // 配置 CORS
+
+// 限制请求速率
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15分钟
+  max: 100 // 限制每个IP 15分钟内最多100个请求
+})
+app.use(limiter)
 
 // 视图配置
 app.set('views', path.join(__dirname, 'views'))
@@ -26,29 +44,72 @@ app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
 app.use(cookieParser())
 
-// 路由配置
-const routerList = require('./routes/index')
-routerList.map((item) => {
-  app.use('/', item)
+// 明确指定静态文件目录
+app.use(express.static(path.join(__dirname, 'views'), { 
+  maxAge: 31536000,
+  etag: true,
+  lastModified: true
+}))
+
+// API 路由配置
+routerList.forEach((router) => {
+  app.use('/', router)
 })
 
-// 明确指定静态文件目录
-app.use(express.static(path.join(__dirname, 'views'), { maxAge: 31536000 }))
-app.use(cors())
+// 404 错误处理
+app.use((req, res, next) => {
+  next(new AppError(404, '请求的资源不存在'))
+})
 
 // 捕获所有未找到的路由，并返回 Vue 应用程序的入口文件
-app.get("*", (req, res) => {
+app.get('*', (req, res) => {
   res.sendFile(path.resolve(__dirname, 'views', 'index.html'))
 })
 
-// 错误处理
-app.use(function (err, req, res, next) {
-  res.locals.message = err.message
-  res.locals.error = req.app.get('env') === 'development' ? err : {}
-  console.error('------Error begin------')
-  console.error(err.status, err)
-  console.error('------Error end------')
-  res.status(err.status || 500).render('error') // 使用通用错误页面模板
+// 错误处理中间件
+app.use(handleError)
+
+// 优雅关闭处理
+let server
+const gracefulShutdown = async (signal) => {
+  console.log(`收到 ${signal} 信号，准备关闭服务器...`)
+  
+  if (server) {
+    server.close(() => {
+      console.log('HTTP 服务器已关闭')
+      process.exit(0)
+    })
+
+    // 如果 10 秒后还没有关闭，强制退出
+    setTimeout(() => {
+      console.error('无法正常关闭服务器，强制退出')
+      process.exit(1)
+    }, 10000)
+  } else {
+    process.exit(0)
+  }
+}
+
+// 处理各种终止信号
+process.on('SIGINT', () => gracefulShutdown('SIGINT'))
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'))
+process.on('SIGQUIT', () => gracefulShutdown('SIGQUIT'))
+
+// 未捕获的异常处理
+process.on('uncaughtException', (error) => {
+  console.error('未捕获的异常:', error)
+  gracefulShutdown('uncaughtException')
 })
 
-module.exports = app
+// 未处理的 Promise 拒绝
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('未处理的 Promise 拒绝:', reason)
+  gracefulShutdown('unhandledRejection')
+})
+
+// 导出 app 和 server 设置函数
+export const setServer = (httpServer) => {
+  server = httpServer
+}
+
+export default app

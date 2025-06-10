@@ -1,0 +1,6 @@
+[
+  { "code": "low", "name": "低" },
+  { "code": "medium", "name": "中" },
+  { "code": "high", "name": "高" },
+  { "code": "urgent", "name": "紧急" }
+] 

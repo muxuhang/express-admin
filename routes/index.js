@@ -1,4 +1,7 @@
-var users = require('./users')
-var login = require('./login')
+import login from './login'
+import users from './users'
+import roles from './roles'
+import permissions from './permissions'
+import publicRouter from './public'
 
-module.exports = [users, login]
+export default [login, users, roles, permissions, publicRouter]
