@@ -5,8 +5,9 @@
  */
 
 import http from 'http'
-import app, { setServer } from '../app'
 import debug from 'debug'
+import app, { setServer } from '../src/app'
+import websocketService from '../src/services/websocket'
 
 const debugServer = debug('express-admin:server')
 
@@ -22,6 +23,9 @@ app.set('port', port)
  */
 
 var server = http.createServer(app)
+
+// 初始化 WebSocket 服务
+websocketService.initialize(server)
 
 // 设置 server 实例到 app 中
 setServer(server)

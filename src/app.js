@@ -10,24 +10,34 @@ import cors from 'cors'
 import ejs from 'ejs'
 import './mongodb'
 import routerList from './routes/index.js'
-import handleError, { AppError } from './middleware/handleError'
-import initDefaultRoles from './function/initDefaultRoles.js'
+import { AppError } from './utils/handleError'
 import helmet from 'helmet'
 import rateLimit from 'express-rate-limit'
 
 var app = express()
 
-// 执行初始化
-initDefaultRoles()
-
 // 安全相关中间件
-app.use(helmet()) // 添加安全头
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'", "ws:", "wss:"],
+      fontSrc: ["'self'"],
+      objectSrc: ["'none'"],
+      mediaSrc: ["'self'"],
+      frameSrc: ["'none'"]
+    }
+  }
+}))
 app.use(cors()) // 配置 CORS
 
 // 限制请求速率
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15分钟
-  max: 100 // 限制每个IP 15分钟内最多100个请求
+  max: 100, // 限制每个IP 15分钟内最多100个请求
 })
 app.use(limiter)
 
@@ -45,11 +55,19 @@ app.use(bodyParser.json())
 app.use(cookieParser())
 
 // 明确指定静态文件目录
-app.use(express.static(path.join(__dirname, 'views'), { 
-  maxAge: 31536000,
-  etag: true,
-  lastModified: true
-}))
+app.use(
+  express.static(path.join(__dirname, 'views'), {
+    maxAge: 31536000,
+    etag: true,
+    lastModified: true,
+  })
+)
+
+// 添加 public 目录的静态文件配置
+app.use(express.static(path.join(__dirname, '../public')))
+
+// 添加 js 目录的静态文件配置
+app.use('/js', express.static(path.join(__dirname, 'views/js')))
 
 // API 路由配置
 routerList.forEach((router) => {
@@ -66,14 +84,11 @@ app.get('*', (req, res) => {
   res.sendFile(path.resolve(__dirname, 'views', 'index.html'))
 })
 
-// 错误处理中间件
-app.use(handleError)
-
 // 优雅关闭处理
 let server
 const gracefulShutdown = async (signal) => {
   console.log(`收到 ${signal} 信号，准备关闭服务器...`)
-  
+
   if (server) {
     server.close(() => {
       console.log('HTTP 服务器已关闭')

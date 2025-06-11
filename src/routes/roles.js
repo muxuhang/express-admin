@@ -2,8 +2,8 @@ import express from 'express'
 import jwt from 'jsonwebtoken'
 import Role from '../models/role.js'
 import User from '../models/user.js'
-import handleError from '../middleware/handleError.js'
-import { checkPermissions } from '../middleware/auth.js'
+import handleError from '../utils/handleError.js'
+import checkPermissions from '../middleware/permissions.js'
 
 const router = express.Router()
 

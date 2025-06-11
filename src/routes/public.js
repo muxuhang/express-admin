@@ -1,7 +1,7 @@
 import express from 'express'
 import fs from 'fs'
 import path from 'path'
-import handleError from '../middleware/handleError'
+import handleError from '../utils/handleError'
 
 const router = express.Router()
 
@@ -11,6 +11,16 @@ const validateAccess = (req, res, next) => {
   // 例如：检查用户权限、验证token等
   next()
 }
+
+// WebSocket 测试页面
+router.get('/websocket-test', (req, res) => {
+  res.sendFile(path.join(__dirname, '../views/websocket.html'))
+})
+
+// Pusher 测试页面
+router.get('/pusher-test', (req, res) => {
+  res.sendFile(path.join(__dirname, '../views/pusher-test.html'))
+})
 
 // 获取文件列表或文件内容
 router.get('/api/public/:folder/:filename?', validateAccess, (req, res) => {

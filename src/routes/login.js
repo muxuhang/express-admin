@@ -4,8 +4,9 @@ import jwt from 'jsonwebtoken'
 import nodemailer from 'nodemailer'
 import User from '../models/user.js'
 import LoginLog from '../models/loginLog.js'
-import handleError from '../middleware/handleError.js'
-import { isValidUsername, isValidPassword } from '../utils/auth.js'
+import handleError, { AppError } from '../utils/handleError.js'
+import { isValidUsername, isValidPassword } from '../utils/valid.js'
+import { verifyToken } from '../utils/auth.js'
 import checkAdmin from '../middleware/checkAdmin.js'
 
 const router = express.Router()
@@ -19,6 +20,25 @@ const getClientIP = (req) => {
     req.connection.socket.remoteAddress
   )
 }
+// 记录失败的登录日志
+const journaling = ({ req, res }, { code = 400, status = 'failed', fail_reason }) => {
+  try {
+    LoginLog.create({
+      username: req?.body?.username,
+      ip_address: getClientIP(req),
+      user_agent: req.headers['user-agent'],
+      login_source: getLoginSource(req.headers['user-agent']),
+      status: status || 'failed',
+      fail_reason: fail_reason,
+    })
+    console.log(status)
+    if (status === 'failed') {
+      return res.status(400).json({ code, message: fail_reason })
+    }
+  } catch (err) {
+    console.error('记录登录日志失败:', err)
+  }
+}
 
 // 判断登录来源
 const getLoginSource = (userAgent) => {
@@ -26,75 +46,24 @@ const getLoginSource = (userAgent) => {
   return mobileKeywords.some((keyword) => userAgent.includes(keyword)) ? 'h5' : 'pc'
 }
 
+// 登录账号
 router.post('/api/login', async (req, res) => {
   try {
     const { username, password } = req.body
     // 基本校验
     if (!isValidUsername(username) || !isValidPassword(password)) {
-      try {
-        // 记录失败的登录日志
-        await LoginLog.create({
-          username,
-          ip_address: getClientIP(req),
-          user_agent: req.headers['user-agent'],
-          login_source: getLoginSource(req.headers['user-agent']),
-          status: 'failed',
-          fail_reason: '用户名或密码格式不正确',
-        })
-      } catch (err) {
-        console.error('记录登录日志失败:', err)
-      }
-
-      return res.status(400).json({
-        code: 400,
-        message: '用户名或密码格式不正确',
-      })
+      return journaling({ req, res }, { fail_reason: '用户名或密码格式不正确' })
     }
-
     // 查找用户
     const user = await User.findOne({ username })
-    // 密码校验统一返回
+    // 用户名错误
     if (!user) {
-      try {
-        // 记录失败的登录日志
-        await LoginLog.create({
-          username,
-          ip_address: getClientIP(req),
-          user_agent: req.headers['user-agent'],
-          login_source: getLoginSource(req.headers['user-agent']),
-          status: 'failed',
-          fail_reason: '用户不存在',
-        })
-      } catch (err) {
-        console.error('记录登录日志失败:', err)
-      }
-
-      return res.status(401).json({
-        code: 401,
-        message: '用户名或密码错误',
-      })
+      return journaling({ req, res }, { code: 401, fail_reason: '用户名或密码错误' })
     }
-
+    // 密码错误
     const isMatch = await bcrypt.compare(password, user.password)
     if (!isMatch) {
-      try {
-        // 记录失败的登录日志
-        await LoginLog.create({
-          username,
-          ip_address: getClientIP(req),
-          user_agent: req.headers['user-agent'],
-          login_source: getLoginSource(req.headers['user-agent']),
-          status: 'failed',
-          fail_reason: '密码错误',
-        })
-      } catch (err) {
-        console.error('记录登录日志失败:', err)
-      }
-
-      return res.status(401).json({
-        code: 401,
-        message: '用户名或密码错误',
-      })
+      return journaling({ req, res }, { code: 401, fail_reason: '用户名或密码错误' })
     }
 
     // 生成 JWT token
@@ -111,16 +80,7 @@ router.post('/api/login', async (req, res) => {
     // 更新最后登录时间
     user.last_login_at = new Date()
     await user.save()
-
-    // 记录成功的登录日志
-    await LoginLog.create({
-      username: user.username,
-      ip_address: getClientIP(req),
-      user_agent: req.headers['user-agent'],
-      login_source: getLoginSource(req.headers['user-agent']),
-      status: 'success',
-    })
-
+    journaling({ req, res }, { status: 'success' })
     res.json({
       code: 0,
       data: {
@@ -181,7 +141,7 @@ router.get('/api/login-logs', checkAdmin, async (req, res) => {
 })
 
 // 注册接口
-router.post('/api/register', async (req, res) => {
+router.post('/api/register', async (req, res, next) => {
   try {
     const { username, password, email, phone } = req.body
 
@@ -192,50 +152,31 @@ router.post('/api/register', async (req, res) => {
       !phone ||
       typeof username !== 'string' ||
       typeof password !== 'string' ||
-      typeof phone !== 'string' ||
-      username.length < 3 ||
-      username.length > 32 ||
-      password.length < 6 ||
-      password.length > 64
+      typeof phone !== 'string'
     ) {
-      return res.status(400).json({
-        code: 400,
-        message: '用户名、密码或手机号格式不正确',
-      })
+      return next(new AppError(400, '用户名、密码或手机号格式不正确'))
     }
 
     // 手机号校验（中国大陆手机号11位，以1开头）
     if (!/^1\d{10}$/.test(phone)) {
-      return res.status(400).json({
-        code: 400,
-        message: '手机号格式不正确',
-      })
+      return next(new AppError(400, '手机号格式不正确'))
     }
 
     // 邮箱可选校验
     if (email && (typeof email !== 'string' || !/^[\w.-]+@[\w.-]+\.\w+$/.test(email))) {
-      return res.status(400).json({
-        code: 400,
-        message: '邮箱格式不正确',
-      })
+      return next(new AppError(400, '邮箱格式不正确'))
     }
 
     // 检查用户名是否已存在
     const existUser = await User.findOne({ username })
     if (existUser) {
-      return res.status(409).json({
-        code: 409,
-        message: '用户名已存在',
-      })
+      return next(new AppError(409, '用户名已存在'))
     }
 
     // 检查手机号是否已存在
     const existPhone = await User.findOne({ phone })
     if (existPhone) {
-      return res.status(409).json({
-        code: 409,
-        message: '手机号已注册',
-      })
+      return next(new AppError(409, '手机号已注册'))
     }
 
     // 密码加密
@@ -269,14 +210,11 @@ router.post('/api/register', async (req, res) => {
 })
 
 // 发送重置密码验证码邮件
-router.post('/api/forgot-password', async (req, res) => {
+router.post('/api/forgot-password', async (req, res, next) => {
   try {
     const { email } = req.body
     if (!email || typeof email !== 'string') {
-      return res.status(400).json({
-        code: 400,
-        message: '邮箱不能为空',
-      })
+      return next(new AppError(400, '邮箱不能为空'))
     }
     const user = await User.findOne({ email })
     if (!user) {
@@ -317,19 +255,16 @@ router.post('/api/forgot-password', async (req, res) => {
       message: '如果该邮箱已注册，将收到验证码邮件',
     })
   } catch (err) {
-    handleError(err, req, res)
+    next(err)
   }
 })
 
 // 重置密码（通过邮箱+验证码）
-router.post('/api/reset-password', async (req, res) => {
+router.post('/api/reset-password', async (req, res, next) => {
   try {
     const { email, code, password } = req.body
     if (!email || !code || !password || typeof password !== 'string' || password.length < 6 || password.length > 64) {
-      return res.status(400).json({
-        code: 400,
-        message: '参数错误',
-      })
+      return next(new AppError(400, '参数错误'))
     }
     const user = await User.findOne({
       email,
@@ -337,10 +272,7 @@ router.post('/api/reset-password', async (req, res) => {
       reset_password_expires: { $gt: Date.now() },
     })
     if (!user) {
-      return res.status(400).json({
-        code: 400,
-        message: '验证码无效或已过期',
-      })
+      return next(new AppError(400, '验证码无效或已过期'))
     }
     user.password = await bcrypt.hash(password, 10)
     user.reset_password_code = undefined
@@ -351,22 +283,17 @@ router.post('/api/reset-password', async (req, res) => {
       message: '密码重置成功',
     })
   } catch (err) {
-    handleError(err, req, res)
+    next(err)
   }
 })
 
 // 已登录用户修改密码
-router.post('/api/change-password', async (req, res) => {
+router.post('/api/change-password', async (req, res, next) => {
   try {
-    const auth = req.headers.authorization
-    if (!auth || !auth.startsWith('Bearer ')) {
-      return res.status(401).json({ code: 401, message: '未授权' })
-    }
-    let payload
     try {
-      payload = verifyToken(req)
+      const payload = verifyToken(req)
     } catch (e) {
-      return res.status(401).json({ code: 401, message: '无效的token' })
+      return next(new AppError(401, '无效的token'))
     }
     const { oldPassword, newPassword } = req.body
     if (
@@ -377,21 +304,33 @@ router.post('/api/change-password', async (req, res) => {
       newPassword.length < 6 ||
       newPassword.length > 64
     ) {
-      return res.status(400).json({ code: 400, message: '参数错误' })
+      return next(new AppError(400, '参数错误'))
     }
     const user = await User.findById(payload.id)
     if (!user) {
-      return res.status(404).json({ code: 404, message: '用户不存在' })
+      return next(new AppError(404, '用户不存在'))
     }
     const isMatch = await bcrypt.compare(oldPassword, user.password)
     if (!isMatch) {
-      return res.status(400).json({ code: 400, message: '原密码错误' })
+      return next(new AppError(400, '原密码错误'))
     }
     user.password = await bcrypt.hash(newPassword, 10)
     await user.save()
     res.json({ code: 0, message: '密码修改成功' })
   } catch (err) {
-    handleError(err, req, res)
+    next(err)
+  }
+})
+
+// 已登录用户，获取个人信息
+router.get('/api/profile', async (req, res) => {
+  try {
+    const payload = verifyToken(req)
+    const user = await User.findById(payload.id, { password: 0 })
+    res.json({ code: 0, message: '获取个人信息成功', data: user })
+  } catch (error) {
+    console.log('error', error)
+    return res.json({ code: 0, data: {} })
   }
 })
 

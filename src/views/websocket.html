@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0" />
+    <title>WebSocket 测试</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      #messageContainer {
+        height: 300px;
+        border: 1px solid #ccc;
+        padding: 10px;
+        margin-bottom: 10px;
+        overflow-y: auto;
+      }
+      .message {
+        margin-bottom: 10px;
+        padding: 5px;
+        border-radius: 4px;
+      }
+      .message.system {
+        background-color: #f0f0f0;
+      }
+      .message.error {
+        background-color: #ffe6e6;
+        color: #ff0000;
+      }
+      .message.success {
+        background-color: #e6ffe6;
+        color: #008000;
+      }
+      .controls {
+        margin-bottom: 20px;
+      }
+      input[type='text'] {
+        width: 70%;
+        padding: 5px;
+        margin-right: 10px;
+      }
+      button {
+        padding: 5px 15px;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>WebSocket 测试</h1>
+    <div class="controls">
+      <button id="connectBtn">连接</button>
+      <button
+        id="disconnectBtn"
+        disabled>
+        断开
+      </button>
+      <button
+        id="pingBtn"
+        disabled>
+        发送 Ping
+      </button>
+    </div>
+    <div class="controls">
+      <input
+        type="text"
+        id="messageInput"
+        placeholder="输入广播消息" />
+      <button
+        id="sendBtn"
+        disabled>
+        发送广播
+      </button>
+    </div>
+    <div id="messageContainer"></div>
+
+    <script src="/js/websocket-test.js"></script>
+  </body>
+</html>
