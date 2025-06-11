@@ -1,7 +1,7 @@
 import express from 'express'
 import fs from 'fs'
 import path from 'path'
-import handleError from '../middleware/handleError.js'
+import handleError from '../utils/handleError.js'
 import checkPermissions from '../middleware/permissions.js'
 
 const router = express.Router()

@@ -21,8 +21,8 @@ const MONGODB_CONFIG = {
     autoIndex: process.env.NODE_ENV !== 'production',
     family: 4, // 强制使用 IPv4
     compressors: 'zlib',
-    zlibCompressionLevel: 9
-  }
+    zlibCompressionLevel: 9,
+  },
 }
 
 // 验证必要的配置
@@ -45,7 +45,7 @@ const connectionState = {
   isConnected: false,
   lastError: null,
   lastConnectionAttempt: null,
-  connectionAttempts: 0
+  connectionAttempts: 0,
 }
 
 // 连接函数
@@ -60,8 +60,8 @@ const connectWithRetry = async () => {
   connectionState.connectionAttempts++
 
   try {
-    console.log(`尝试连接数据库... (尝试 ${retryCount + 1}/${MAX_RETRIES})`)
-    
+    console.log(`连接数据库... (${retryCount + 1}/${MAX_RETRIES})`)
+
     await mongoose.connect(MONGODB_CONFIG.url, {
       ...MONGODB_CONFIG.options,
       user: MONGODB_CONFIG.username,
@@ -73,16 +73,16 @@ const connectWithRetry = async () => {
     console.log('数据库连接成功')
     const port = process.env.PORT || 3000
     console.log(`接口地址: http://localhost:${port}`)
-    
+
     // 重置重试计数
     retryCount = 0
   } catch (error) {
     connectionState.lastError = error
     console.error('MongoDB 连接错误:', error.message)
-    
+
     if (retryCount < MAX_RETRIES - 1) {
       retryCount++
-      console.log(`${RETRY_INTERVAL/1000}秒后重试...`)
+      console.log(`${RETRY_INTERVAL / 1000}秒后重试...`)
       setTimeout(connectWithRetry, RETRY_INTERVAL)
     } else {
       console.error('达到最大重试次数，退出程序')
@@ -106,7 +106,7 @@ const monitorConnection = () => {
     0: 'disconnected',
     1: 'connected',
     2: 'connecting',
-    3: 'disconnecting'
+    3: 'disconnecting',
   }
   console.log(`MongoDB 连接状态: ${states[state]}`)
 }
