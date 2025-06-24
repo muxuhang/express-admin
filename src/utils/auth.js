@@ -1,15 +1,6 @@
 import jwt from 'jsonwebtoken'
 
 /**
- * 检查字符串是否为空
- * @param {string} str - 要检查的字符串
- * @returns {boolean} - 如果字符串为空返回true，否则返回false
- */
-export const isEmpty = (str) => {
-  return !str || str.trim().length === 0
-}
-
-/**
  * 验证JWT token
  * @param {string} req - JWT token
  * @returns {object|null} - 解析后的token payload或null

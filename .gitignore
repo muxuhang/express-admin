@@ -2,16 +2,15 @@ node_modules
 db/
 db2/
 
-
+# Environment files
+.env
+.env.backup
+.env.local
+.env.*.local
 
 # project files
 .DS_Store
 /dist
-
-
-# local env files
-.env.local
-.env.*.local
 
 # Log files
 npm-debug.log*

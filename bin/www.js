@@ -8,6 +8,13 @@ import http from 'http'
 import debug from 'debug'
 import app, { setServer } from '../src/app'
 import websocketService from '../src/services/websocket'
+import { connectWithRetry } from '../src/mongodb'
+import { fetch, Headers, Request, Response } from 'undici';
+
+globalThis.fetch = fetch
+globalThis.Headers = Headers
+globalThis.Request = Request
+globalThis.Response = Response
 
 const debugServer = debug('express-admin:server')
 
@@ -18,25 +25,42 @@ const debugServer = debug('express-admin:server')
 var port = normalizePort(process.env.PORT || '3000')
 app.set('port', port)
 
-/**
- * Create HTTP server.
- */
-
-var server = http.createServer(app)
-
-// 初始化 WebSocket 服务
-websocketService.initialize(server)
-
-// 设置 server 实例到 app 中
-setServer(server)
+// 声明全局server变量
+let server
 
 /**
- * Listen on provided port, on all network interfaces.
+ * 启动服务器的函数
  */
+const startServer = async () => {
+  try {
+    // 等待数据库连接
+    console.log('等待数据库连接...')
+    await connectWithRetry()
+    console.log('数据库连接成功，启动服务器...')
 
-server.listen(port)
-server.on('error', onError)
-server.on('listening', onListening)
+    /**
+     * Create HTTP server.
+     */
+    server = http.createServer(app)
+
+    // 初始化 WebSocket 服务
+    websocketService.initialize(server)
+
+    // 设置 server 实例到 app 中
+    setServer(server)
+
+    /**
+     * Listen on provided port, on all network interfaces.
+     */
+    server.listen(port)
+    server.on('error', onError)
+    server.on('listening', onListening)
+
+  } catch (error) {
+    console.error('启动服务器失败:', error)
+    process.exit(1)
+  }
+}
 
 /**
  * Normalize a port into a number, string, or false.
@@ -92,4 +116,8 @@ function onListening() {
   var addr = server.address()
   var bind = typeof addr === 'string' ? 'pipe ' + addr : 'port ' + addr.port
   debugServer('Listening on ' + bind)
+  console.log(`服务器启动成功，监听端口: ${port}`)
 }
+
+// 启动服务器
+startServer()

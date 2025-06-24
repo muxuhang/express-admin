@@ -1,4 +1,13 @@
 /**
+ * 检查字符串是否为空
+ * @param {string} str - 要检查的字符串
+ * @returns {boolean} - 如果字符串为空返回true，否则返回false
+ */
+export const isEmpty = (str) => {
+  return !str || str.trim().length === 0
+}
+
+/**
  * 验证用户名格式
  * @param {string} username - 用户名
  * @returns {boolean} - 如果格式正确返回true，否则返回false
@@ -13,7 +22,7 @@ export const isValidUsername = (username) => {
  * @returns {boolean} - 如果格式正确返回true，否则返回false
  */
 export const isValidPassword = (password) => {
-  return password && typeof password === 'string' && password.length >= 6 && password.length <= 64
+  return password && typeof password === 'string' && password.length >= 6
 }
 
 /**

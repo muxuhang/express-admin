@@ -1,15 +1,18 @@
 import express from 'express'
 import User from '../models/user.js'
-import checkPermissions from '../middleware/permissions.js'
 import handleError from '../utils/handleError.js'
 
 const router = express.Router()
 
 // 获取用户列表
-router.get('/api/users', checkPermissions(['view_users']), async (req, res) => {
+router.get('/api/users', async (req, res) => {
   try {
     const { keyword } = req.query
-    const query = keyword ? { $or: [{ username: new RegExp(keyword, 'i') }, { email: new RegExp(keyword, 'i') }] } : {}
+    const query = keyword
+      ? {
+          $or: [{ username: new RegExp(keyword, 'i') }, { email: new RegExp(keyword, 'i') }],
+        }
+      : {}
     const total = await User.countDocuments(query)
     const users = await User.find(query)
     res.json({ code: 0, message: '获取用户列表成功', data: { total, users } })
@@ -19,7 +22,7 @@ router.get('/api/users', checkPermissions(['view_users']), async (req, res) => {
 })
 
 // 查看用户详情
-router.get('/api/users/:id', checkPermissions(['view_users']), async (req, res) => {
+router.get('/api/users/:id', async (req, res) => {
   try {
     const { id } = req.params
     const user = await User.findById(id, { password: 0 })
@@ -33,7 +36,7 @@ router.get('/api/users/:id', checkPermissions(['view_users']), async (req, res) 
 })
 
 // 创建新用户
-router.post('/api/users', checkPermissions(['create_user']), async (req, res) => {
+router.post('/api/users', async (req, res) => {
   try {
     const userData = req.body
     const user = new User(userData)
@@ -45,7 +48,7 @@ router.post('/api/users', checkPermissions(['create_user']), async (req, res) =>
 })
 
 // 修改用户信息
-router.put('/api/users/:id', checkPermissions(['edit_user']), async (req, res) => {
+router.put('/api/users/:id', async (req, res) => {
   try {
     const { id } = req.params
     const userData = req.body
@@ -63,7 +66,7 @@ router.put('/api/users/:id', checkPermissions(['edit_user']), async (req, res) =
 })
 
 // 删除用户
-router.delete('/api/users/:id', checkPermissions(['delete_user']), async (req, res) => {
+router.delete('/api/users/:id', async (req, res) => {
   try {
     const { id } = req.params
     const user = await User.findById(id)
