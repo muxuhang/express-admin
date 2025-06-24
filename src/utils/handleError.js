@@ -22,7 +22,10 @@ class AppError extends Error {
   }
 }
 
-// 错误处理中间件
+const getErrorMessage = (err) => {
+  return process.env.NODE_ENV === 'development' ? err.error : undefined
+}
+// 处理未检测到的错误
 const handleError = (err, req, res, next) => {
   console.error('------Error begin------')
   console.error(`Request: ${req.method} ${req.originalUrl}`)
@@ -34,7 +37,7 @@ const handleError = (err, req, res, next) => {
     return res.status(err.status).json({
       code: err.status,
       message: err.message,
-      error: process.env.NODE_ENV === 'development' ? err.error : undefined,
+      error: getErrorMessage(err),
     })
   }
 
@@ -43,7 +46,7 @@ const handleError = (err, req, res, next) => {
     return res.status(401).json({
       code: 401,
       message: '无效的token',
-      error: process.env.NODE_ENV === 'development' ? err.message : undefined,
+      error: getErrorMessage(err),
     })
   }
 
@@ -52,7 +55,7 @@ const handleError = (err, req, res, next) => {
     return res.status(401).json({
       code: 401,
       message: '登录已过期，请重新登录',
-      error: process.env.NODE_ENV === 'development' ? err.message : undefined,
+      error: getErrorMessage(err),
     })
   }
 
@@ -61,7 +64,7 @@ const handleError = (err, req, res, next) => {
     return res.status(400).json({
       code: 400,
       message: '数据验证失败',
-      error: process.env.NODE_ENV === 'development' ? err.message : undefined,
+      error: getErrorMessage(err),
     })
   }
 
@@ -70,7 +73,7 @@ const handleError = (err, req, res, next) => {
     return res.status(400).json({
       code: 400,
       message: '数据已存在',
-      error: process.env.NODE_ENV === 'development' ? err.message : undefined,
+      error: getErrorMessage(err),
     })
   }
 
@@ -81,9 +84,9 @@ const handleError = (err, req, res, next) => {
   res.status(status).json({
     code: status,
     message,
-    error: process.env.NODE_ENV === 'development' ? err.message : undefined,
+    error: getErrorMessage(err),
   })
 }
 
 export { errorMessages, AppError }
-export default handleError 
+export default handleError

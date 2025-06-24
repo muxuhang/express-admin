@@ -1,15 +1,28 @@
 import express from 'express'
-import bcrypt from 'bcrypt'
+import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
-import nodemailer from 'nodemailer'
 import User from '../models/user.js'
 import LoginLog from '../models/loginLog.js'
-import handleError, { AppError } from '../utils/handleError.js'
-import { isValidUsername, isValidPassword } from '../utils/valid.js'
+import handleError from '../utils/handleError.js'
+import { isValidUsername, isValidPassword, isEmpty, isValidEmail, isValidPhone } from '../utils/valid.js'
 import { verifyToken } from '../utils/auth.js'
-import checkAdmin from '../middleware/checkAdmin.js'
 
 const router = express.Router()
+
+// 使用内存存储验证码
+const emailCodeStore = new Map()
+
+// 获取验证码
+const getCode = (email) => {
+  return emailCodeStore.get(email)
+}
+
+// 设置验证码
+const setCode = (email, code) => {
+  emailCodeStore.set(email, code)
+  // 60秒后自动删除
+  setTimeout(() => emailCodeStore.delete(email), 60000)
+}
 
 // 获取客户端IP地址
 const getClientIP = (req) => {
@@ -20,7 +33,7 @@ const getClientIP = (req) => {
     req.connection.socket.remoteAddress
   )
 }
-// 记录失败的登录日志
+// 记录登录日志
 const journaling = ({ req, res }, { code = 400, status = 'failed', fail_reason }) => {
   try {
     LoginLog.create({
@@ -50,6 +63,12 @@ const getLoginSource = (userAgent) => {
 router.post('/api/login', async (req, res) => {
   try {
     const { username, password } = req.body
+    if (isEmpty(username)) {
+      return journaling({ req, res }, { fail_reason: '用户名不能为空' })
+    }
+    if (isEmpty(password)) {
+      return journaling({ req, res }, { fail_reason: '密码不能为空' })
+    }
     // 基本校验
     if (!isValidUsername(username) || !isValidPassword(password)) {
       return journaling({ req, res }, { fail_reason: '用户名或密码格式不正确' })
@@ -65,7 +84,6 @@ router.post('/api/login', async (req, res) => {
     if (!isMatch) {
       return journaling({ req, res }, { code: 401, fail_reason: '用户名或密码错误' })
     }
-
     // 生成 JWT token
     const token = jwt.sign(
       {
@@ -76,7 +94,6 @@ router.post('/api/login', async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: '365d' } // 设置为365天有效期
     )
-
     // 更新最后登录时间
     user.last_login_at = new Date()
     await user.save()
@@ -101,7 +118,7 @@ router.post('/api/login', async (req, res) => {
 })
 
 // 查询登录日志
-router.get('/api/login-logs', checkAdmin, async (req, res) => {
+router.get('/api/login-logs', async (req, res) => {
   try {
     // 获取查询参数
     const { username, start_date, end_date, status, login_source, page = 1, limit = 10 } = req.query
@@ -144,7 +161,6 @@ router.get('/api/login-logs', checkAdmin, async (req, res) => {
 router.post('/api/register', async (req, res, next) => {
   try {
     const { username, password, email, phone } = req.body
-
     // 基本校验
     if (
       !username ||
@@ -154,29 +170,32 @@ router.post('/api/register', async (req, res, next) => {
       typeof password !== 'string' ||
       typeof phone !== 'string'
     ) {
-      return next(new AppError(400, '用户名、密码或手机号格式不正确'))
+      return res.status(400).json({ code: 400, message: '用户名、密码或手机号格式不正确' })
     }
-
     // 手机号校验（中国大陆手机号11位，以1开头）
-    if (!/^1\d{10}$/.test(phone)) {
-      return next(new AppError(400, '手机号格式不正确'))
+    if (!isValidPhone(phone)) {
+      return res.status(400).json({ code: 400, message: '手机号格式不正确' })
     }
-
     // 邮箱可选校验
-    if (email && (typeof email !== 'string' || !/^[\w.-]+@[\w.-]+\.\w+$/.test(email))) {
-      return next(new AppError(400, '邮箱格式不正确'))
+    if (!isValidEmail(email)) {
+      return res.status(400).json({ code: 400, message: '邮箱格式不正确' })
     }
-
     // 检查用户名是否已存在
     const existUser = await User.findOne({ username })
     if (existUser) {
-      return next(new AppError(409, '用户名已存在'))
+      return res.status(400).json({ code: 409, message: '用户名已存在' })
     }
-
     // 检查手机号是否已存在
     const existPhone = await User.findOne({ phone })
     if (existPhone) {
-      return next(new AppError(409, '手机号已注册'))
+      return res.status(400).json({ code: 409, message: '手机号已注册' })
+    }
+    // 检查邮箱是否已存在
+    if (email) {
+      const existEmail = await User.findOne({ email })
+      if (existEmail) {
+        return res.status(400).json({ code: 409, message: '邮箱已注册' })
+      }
     }
 
     // 密码加密
@@ -210,13 +229,14 @@ router.post('/api/register', async (req, res, next) => {
 })
 
 // 发送重置密码验证码邮件
-router.post('/api/forgot-password', async (req, res, next) => {
+router.post('/api/email-code', async (req, res, next) => {
   try {
     const { email } = req.body
     if (!email || typeof email !== 'string') {
-      return next(new AppError(400, '邮箱不能为空'))
+      return res.status(400).json({ code: 400, message: '邮箱不能为空' })
     }
     const user = await User.findOne({ email })
+    console.log('user', user)
     if (!user) {
       // 不泄露邮箱是否存在
       return res.json({
@@ -225,37 +245,31 @@ router.post('/api/forgot-password', async (req, res, next) => {
       })
     }
 
+    // 检查是否在一分钟内重复获取验证码
+    const lastSentTime = getCode(email)
+    if (lastSentTime && Date.now() - parseInt(lastSentTime) < 60 * 1000) {
+      return res.status(400).json({
+        code: 400,
+        message: '请等待一分钟后再获取验证码',
+      })
+    }
+
     // 生成6位数字验证码
     const code = Math.floor(100000 + Math.random() * 900000).toString()
-    user.reset_password_code = code
-    user.reset_password_expires = Date.now() + 1000 * 60 * 30 // 30分钟有效
-    await user.save()
 
-    // 配置邮件发送
-    const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: process.env.SMTP_PORT,
-      secure: false,
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
-    })
+    // 记录发送时间和验证码
+    setCode(email, code)
 
-    await transporter.sendMail({
-      from: process.env.SMTP_FROM || process.env.SMTP_USER,
-      to: email,
-      subject: '密码重置验证码',
-      text: `您的密码重置验证码为：${code}，30分钟内有效。`,
-      html: `<p>您的密码重置验证码为：<b>${code}</b>，30分钟内有效。</p>`,
-    })
+    console.log('邮箱验证码', code)
+
+    // ! 配置邮件发送,尚未配置
 
     res.json({
       code: 0,
       message: '如果该邮箱已注册，将收到验证码邮件',
     })
   } catch (err) {
-    next(err)
+    handleError(err, req, res)
   }
 })
 
@@ -263,62 +277,59 @@ router.post('/api/forgot-password', async (req, res, next) => {
 router.post('/api/reset-password', async (req, res, next) => {
   try {
     const { email, code, password } = req.body
-    if (!email || !code || !password || typeof password !== 'string' || password.length < 6 || password.length > 64) {
-      return next(new AppError(400, '参数错误'))
+    if (!email || !code || !password || typeof password !== 'string' || password.length < 6) {
+      return res.status(400).json({ code: 400, message: '参数错误' })
     }
-    const user = await User.findOne({
-      email,
-      reset_password_code: code,
-      reset_password_expires: { $gt: Date.now() },
-    })
+    const user = await User.findOne({ email })
     if (!user) {
-      return next(new AppError(400, '验证码无效或已过期'))
+      return res.status(400).json({ code: 400, message: '用户不存在' })
     }
+
+    // 验证码校验
+    const savedCode = getCode(email)
+    if (!savedCode || savedCode !== code) {
+      return res.status(400).json({ code: 400, message: '验证码无效' })
+    }
+
+    // 更新密码
     user.password = await bcrypt.hash(password, 10)
-    user.reset_password_code = undefined
-    user.reset_password_expires = undefined
     await user.save()
-    res.json({
-      code: 0,
-      message: '密码重置成功',
-    })
+
+    // 删除验证码
+    emailCodeStore.delete(email)
+
+    res.json({ code: 0, message: '密码重置成功' })
   } catch (err) {
-    next(err)
+    handleError(err, req, res)
   }
 })
 
 // 已登录用户修改密码
 router.post('/api/change-password', async (req, res, next) => {
   try {
-    try {
-      const payload = verifyToken(req)
-    } catch (e) {
-      return next(new AppError(401, '无效的token'))
-    }
     const { oldPassword, newPassword } = req.body
     if (
       !oldPassword ||
       !newPassword ||
       typeof oldPassword !== 'string' ||
       typeof newPassword !== 'string' ||
-      newPassword.length < 6 ||
-      newPassword.length > 64
+      newPassword.length < 6
     ) {
-      return next(new AppError(400, '参数错误'))
+      return res.status(400).json({ code: 400, message: '参数错误' })
     }
     const user = await User.findById(payload.id)
     if (!user) {
-      return next(new AppError(404, '用户不存在'))
+      return res.status(404).json({ code: 400, message: '用户不存在' })
     }
     const isMatch = await bcrypt.compare(oldPassword, user.password)
     if (!isMatch) {
-      return next(new AppError(400, '原密码错误'))
+      return res.status(400).json({ code: 400, message: '原密码错误' })
     }
     user.password = await bcrypt.hash(newPassword, 10)
     await user.save()
     res.json({ code: 0, message: '密码修改成功' })
   } catch (err) {
-    next(err)
+    handleError(err, req, res)
   }
 })
 
@@ -330,7 +341,7 @@ router.get('/api/profile', async (req, res) => {
     res.json({ code: 0, message: '获取个人信息成功', data: user })
   } catch (error) {
     console.log('error', error)
-    return res.json({ code: 0, data: {} })
+    return res.json({ code: 0, message: JSON.stringify(error), data: {} })
   }
 })
 

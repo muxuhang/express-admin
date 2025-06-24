@@ -13,6 +13,7 @@ import routerList from './routes/index.js'
 import { AppError } from './utils/handleError'
 import helmet from 'helmet'
 import rateLimit from 'express-rate-limit'
+import chatRoutes from './routes/chat.js'
 
 var app = express()
 
@@ -73,6 +74,9 @@ app.use('/js', express.static(path.join(__dirname, 'views/js')))
 routerList.forEach((router) => {
   app.use('/', router)
 })
+
+// 添加聊天路由
+app.use('/api/chat', chatRoutes)
 
 // 404 错误处理
 app.use((req, res, next) => {

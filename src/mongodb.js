@@ -35,7 +35,7 @@ if (!MONGODB_CONFIG.url) {
 mongoose.set('strictQuery', false)
 
 // 连接重试配置
-const MAX_RETRIES = 3
+const MAX_RETRIES = 300
 const RETRY_INTERVAL = 5000
 let retryCount = 0
 let isConnecting = false
@@ -48,49 +48,68 @@ const connectionState = {
   connectionAttempts: 0,
 }
 
+// 连接Promise
+let connectionPromise = null
+
 // 连接函数
 const connectWithRetry = async () => {
   if (isConnecting) {
     console.log('已有连接尝试正在进行中...')
-    return
+    return connectionPromise
+  }
+
+  if (connectionPromise) {
+    return connectionPromise
   }
 
   isConnecting = true
   connectionState.lastConnectionAttempt = new Date()
   connectionState.connectionAttempts++
 
-  try {
-    console.log(`连接数据库... (${retryCount + 1}/${MAX_RETRIES})`)
+  connectionPromise = new Promise(async (resolve, reject) => {
+    try {
+      console.log(`连接数据库... (${retryCount + 1}/${MAX_RETRIES})`)
 
-    await mongoose.connect(MONGODB_CONFIG.url, {
-      ...MONGODB_CONFIG.options,
-      user: MONGODB_CONFIG.username,
-      pass: MONGODB_CONFIG.password,
-    })
+      await mongoose.connect(MONGODB_CONFIG.url, {
+        ...MONGODB_CONFIG.options,
+        user: MONGODB_CONFIG.username,
+        pass: MONGODB_CONFIG.password,
+      })
 
-    connectionState.isConnected = true
-    connectionState.lastError = null
-    console.log('数据库连接成功')
-    const port = process.env.PORT || 3000
-    console.log(`接口地址: http://localhost:${port}`)
+      connectionState.isConnected = true
+      connectionState.lastError = null
+      console.log('数据库连接成功')
+      const port = process.env.PORT || 3000
+      console.log(`接口地址: http://localhost:${port}`)
+      
+      // 重置重试计数
+      retryCount = 0
+      resolve()
+    } catch (error) {
+      connectionState.lastError = error
+      console.error('MongoDB 连接错误:', error.message)
 
-    // 重置重试计数
-    retryCount = 0
-  } catch (error) {
-    connectionState.lastError = error
-    console.error('MongoDB 连接错误:', error.message)
-
-    if (retryCount < MAX_RETRIES - 1) {
-      retryCount++
-      console.log(`${RETRY_INTERVAL / 1000}秒后重试...`)
-      setTimeout(connectWithRetry, RETRY_INTERVAL)
-    } else {
-      console.error('达到最大重试次数，退出程序')
-      process.exit(1)
+      if (retryCount < MAX_RETRIES - 1) {
+        retryCount++
+        console.log(`${RETRY_INTERVAL / 1000}秒后重试...`)
+        setTimeout(async () => {
+          try {
+            await connectWithRetry()
+            resolve()
+          } catch (retryError) {
+            reject(retryError)
+          }
+        }, RETRY_INTERVAL)
+      } else {
+        console.error('达到最大重试次数，退出程序')
+        reject(error)
+      }
+    } finally {
+      isConnecting = false
     }
-  } finally {
-    isConnecting = false
-  }
+  })
+
+  return connectionPromise
 }
 
 // 设置 Promise
@@ -122,6 +141,8 @@ db.on('connected', () => {
 db.on('disconnected', () => {
   connectionState.isConnected = false
   console.log('MongoDB 连接已断开')
+  // 重置连接Promise，允许重新连接
+  connectionPromise = null
   // 如果不是主动断开，尝试重连
   if (!connectionState.isConnecting) {
     connectWithRetry()
@@ -166,6 +187,6 @@ process.on('unhandledRejection', (reason, promise) => {
 // 启动连接
 connectWithRetry()
 
-// 导出 mongoose 实例和连接状态
-export { connectionState }
+// 导出 mongoose 实例、连接状态和连接Promise
+export { connectionState, connectWithRetry }
 export default mongoose

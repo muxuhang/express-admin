@@ -2,21 +2,16 @@ import express from 'express'
 import jwt from 'jsonwebtoken'
 import Role from '../models/role.js'
 import User from '../models/user.js'
-import handleError from '../utils/handleError.js'
-import checkPermissions from '../middleware/permissions.js'
 
 const router = express.Router()
 
 // 获取角色列表
-router.get('/api/roles', checkPermissions(['view_roles']), async (req, res) => {
+router.get('/api/roles', async (req, res) => {
   try {
     const { keyword } = req.query
     const query = keyword
       ? {
-          $or: [
-            { name: new RegExp(keyword, 'i') },
-            { code: new RegExp(keyword, 'i') }
-          ]
+          $or: [{ name: new RegExp(keyword, 'i') }, { code: new RegExp(keyword, 'i') }],
         }
       : {}
 
@@ -28,27 +23,27 @@ router.get('/api/roles', checkPermissions(['view_roles']), async (req, res) => {
       message: '获取角色列表成功',
       data: {
         total,
-        roles
-      }
+        roles,
+      },
     })
   } catch (error) {
     res.status(500).json({
       code: 500,
       message: '获取角色列表失败',
-      error: error.message
+      error: error.message,
     })
   }
 })
 
 // 创建角色
-router.post('/api/roles', checkPermissions(['create_role']), async (req, res) => {
+router.post('/api/roles', async (req, res) => {
   try {
     const { name, code, description, permissions } = req.body
 
     if (!name || !code) {
       return res.status(400).json({
         code: 400,
-        message: '角色名称和编码不能为空'
+        message: '角色名称和编码不能为空',
       })
     }
 
@@ -56,7 +51,7 @@ router.post('/api/roles', checkPermissions(['create_role']), async (req, res) =>
     if (existRole) {
       return res.status(400).json({
         code: 400,
-        message: '角色编码已存在'
+        message: '角色编码已存在',
       })
     }
 
@@ -64,25 +59,25 @@ router.post('/api/roles', checkPermissions(['create_role']), async (req, res) =>
       name,
       code,
       description,
-      permissions
+      permissions,
     })
 
     res.json({
       code: 0,
       message: '创建角色成功',
-      data: role
+      data: role,
     })
   } catch (error) {
     res.status(500).json({
       code: 500,
       message: '创建角色失败',
-      error: error.message
+      error: error.message,
     })
   }
 })
 
 // 更新角色
-router.put('/api/roles/:id', checkPermissions(['edit_role']), async (req, res) => {
+router.put('/api/roles/:id', async (req, res) => {
   try {
     const { id } = req.params
     const { name, description, permissions } = req.body
@@ -91,14 +86,14 @@ router.put('/api/roles/:id', checkPermissions(['edit_role']), async (req, res) =
     if (!role) {
       return res.status(404).json({
         code: 404,
-        message: '角色不存在'
+        message: '角色不存在',
       })
     }
 
     if (role.is_system) {
       return res.status(403).json({
         code: 403,
-        message: '系统角色不能修改'
+        message: '系统角色不能修改',
       })
     }
 
@@ -111,19 +106,19 @@ router.put('/api/roles/:id', checkPermissions(['edit_role']), async (req, res) =
     res.json({
       code: 0,
       message: '更新角色成功',
-      data: role
+      data: role,
     })
   } catch (error) {
     res.status(500).json({
       code: 500,
       message: '更新角色失败',
-      error: error.message
+      error: error.message,
     })
   }
 })
 
 // 删除角色
-router.delete('/api/roles/:id', checkPermissions(['delete_role']), async (req, res) => {
+router.delete('/api/roles/:id', async (req, res) => {
   try {
     const { id } = req.params
 
@@ -131,14 +126,14 @@ router.delete('/api/roles/:id', checkPermissions(['delete_role']), async (req, r
     if (!role) {
       return res.status(404).json({
         code: 404,
-        message: '角色不存在'
+        message: '角色不存在',
       })
     }
 
     if (role.is_system) {
       return res.status(403).json({
         code: 403,
-        message: '系统角色不能删除'
+        message: '系统角色不能删除',
       })
     }
 
@@ -147,7 +142,7 @@ router.delete('/api/roles/:id', checkPermissions(['delete_role']), async (req, r
     if (userCount > 0) {
       return res.status(400).json({
         code: 400,
-        message: '该角色下还有用户，不能删除'
+        message: '该角色下还有用户，不能删除',
       })
     }
 
@@ -155,15 +150,15 @@ router.delete('/api/roles/:id', checkPermissions(['delete_role']), async (req, r
 
     res.json({
       code: 0,
-      message: '删除角色成功'
+      message: '删除角色成功',
     })
   } catch (error) {
     res.status(500).json({
       code: 500,
       message: '删除角色失败',
-      error: error.message
+      error: error.message,
     })
   }
 })
 
-export default router 
+export default router
