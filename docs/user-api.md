@@ -67,7 +67,7 @@
 
 ### 2. 获取可用角色列表
 
-**GET** `/api/users/roles`
+**GET** `/api/users-roles`
 
 **功能：** 获取所有启用状态的角色，用于用户创建/编辑时的角色选择
 
@@ -282,25 +282,10 @@ GET /api/users?status=active
 GET /api/users?page=1&limit=20
 ```
 
-### 停用用户
-```javascript
-// 停用用户
-PATCH /api/users/:id/status
-{
-  "status": "inactive"
-}
-
-// 重新启用用户
-PATCH /api/users/:id/status
-{
-  "status": "active"
-}
-```
-
 ### 获取可用角色
 ```javascript
 // 获取所有启用状态的角色
-GET /api/users/roles
+GET /api/users-roles
 ```
 
 ## 状态管理说明

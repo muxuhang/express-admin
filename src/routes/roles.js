@@ -2,7 +2,9 @@ import express from 'express'
 import jwt from 'jsonwebtoken'
 import Role from '../models/role.js'
 import User from '../models/user.js'
+import Menu from '../models/menu.js'
 import authLogin from '../middleware/authLogin.js'
+import mongoose from 'mongoose'
 
 const router = express.Router()
 
@@ -13,10 +15,7 @@ router.get('/api/roles', authLogin, async (req, res) => {
     const query = {}
 
     if (keyword) {
-      query.$or = [
-        { name: new RegExp(keyword, 'i') }, 
-        { code: new RegExp(keyword, 'i') }
-      ]
+      query.$or = [{ name: new RegExp(keyword, 'i') }, { code: new RegExp(keyword, 'i') }]
     }
 
     if (status) {
@@ -49,21 +48,17 @@ router.get('/api/roles', authLogin, async (req, res) => {
 })
 
 // 获取所有角色（用于下拉选择）
-router.get('/api/roles/all', authLogin, async (req, res) => {
+router.get('/api/roles-all', authLogin, async (req, res) => {
   try {
     const { status } = req.query
     const query = {}
 
-    // 默认只返回启用状态的角色，除非明确指定状态
+    // 只有在明确传入 status 参数时才进行状态筛选
     if (status) {
       query.status = status
-    } else {
-      query.status = 'active'
     }
 
-    const roles = await Role.find(query)
-      .sort({ createdAt: -1 })
-      .select('name code description status')
+    const roles = await Role.find(query).sort({ createdAt: -1 }).select('name code description status')
 
     res.json({
       code: 0,
@@ -135,13 +130,6 @@ router.put('/api/roles/:id', authLogin, async (req, res) => {
       })
     }
 
-    if (role.isSystem) {
-      return res.status(403).json({
-        code: 403,
-        message: '系统角色不能修改',
-      })
-    }
-
     if (name) role.name = name
     if (description !== undefined) role.description = description
     if (permissions) role.permissions = permissions
@@ -186,13 +174,6 @@ router.patch('/api/roles/:id/status', authLogin, async (req, res) => {
       })
     }
 
-    if (role.isSystem) {
-      return res.status(403).json({
-        code: 403,
-        message: '系统角色不能停用',
-      })
-    }
-
     role.status = status
     await role.save()
 
@@ -205,50 +186,6 @@ router.patch('/api/roles/:id/status', authLogin, async (req, res) => {
     res.status(500).json({
       code: 500,
       message: '更新角色状态失败',
-      error: error.message,
-    })
-  }
-})
-
-// 删除角色
-router.delete('/api/roles/:id', authLogin, async (req, res) => {
-  try {
-    const { id } = req.params
-
-    const role = await Role.findById(id)
-    if (!role) {
-      return res.status(404).json({
-        code: 404,
-        message: '角色不存在',
-      })
-    }
-
-    if (role.isSystem) {
-      return res.status(403).json({
-        code: 403,
-        message: '系统角色不能删除',
-      })
-    }
-
-    // 检查是否有用户使用该角色
-    const userCount = await User.countDocuments({ role: role.code })
-    if (userCount > 0) {
-      return res.status(400).json({
-        code: 400,
-        message: '该角色下还有用户，不能删除',
-      })
-    }
-
-    await role.deleteOne()
-
-    res.json({
-      code: 0,
-      message: '删除角色成功',
-    })
-  } catch (error) {
-    res.status(500).json({
-      code: 500,
-      message: '删除角色失败',
       error: error.message,
     })
   }
@@ -280,6 +217,107 @@ router.post('/api/roles/init', authLogin, async (req, res) => {
     res.status(500).json({
       code: 500,
       message: '初始化默认角色失败',
+      error: error.message,
+    })
+  }
+})
+
+// 获取角色菜单权限
+router.get('/api/roles/:id/menus', authLogin, async (req, res) => {
+  try {
+    const { id } = req.params
+
+    const role = await Role.findById(id)
+    if (!role) {
+      return res.status(404).json({
+        code: 404,
+        message: '角色不存在',
+      })
+    }
+
+    // 获取角色关联的菜单详情
+    let menus = []
+    if (role.menuIds && role.menuIds.length > 0) {
+      menus = await Menu.find({ _id: { $in: role.menuIds } }).sort({ order: 1, createdAt: -1 })
+    }
+
+    res.json({
+      code: 0,
+      message: '获取角色菜单权限成功',
+      data: {
+        roleId: role._id,
+        roleName: role.name,
+        menuIds: role.menuIds || [],
+        menus: menus,
+      },
+    })
+  } catch (error) {
+    res.status(500).json({
+      code: 500,
+      message: '获取角色菜单权限失败',
+      error: error.message,
+    })
+  }
+})
+
+// 更新角色菜单权限
+router.put('/api/roles/:id/menus', authLogin, async (req, res) => {
+  try {
+    const { id } = req.params
+    const { menuIds } = req.body
+
+    const role = await Role.findById(id)
+    if (!role) {
+      return res.status(404).json({
+        code: 404,
+        message: '角色不存在',
+      })
+    }
+
+    // 验证菜单ID是否有效
+    if (menuIds && Array.isArray(menuIds) && menuIds.length > 0) {
+      const validMenuIds = menuIds.filter((id) => mongoose.Types.ObjectId.isValid(id))
+      if (validMenuIds.length !== menuIds.length) {
+        return res.status(400).json({
+          code: 400,
+          message: '包含无效的菜单ID',
+        })
+      }
+
+      // 检查菜单是否存在
+      const existingMenus = await Menu.find({ _id: { $in: validMenuIds } })
+      if (existingMenus.length !== validMenuIds.length) {
+        return res.status(400).json({
+          code: 400,
+          message: '部分菜单不存在',
+        })
+      }
+    }
+
+    // 更新菜单权限
+    role.menuIds = menuIds || []
+    await role.save()
+
+    // 获取更新后的菜单详情
+    let menus = []
+    if (role.menuIds && role.menuIds.length > 0) {
+      menus = await Menu.find({ _id: { $in: role.menuIds } }).sort({ order: 1, createdAt: -1 })
+    }
+
+    res.json({
+      code: 0,
+      message: '更新角色菜单权限成功',
+      data: {
+        roleId: role._id,
+        roleName: role.name,
+        menuIds: role.menuIds,
+        menus: menus,
+      },
+    })
+  } catch (error) {
+    res.status(500).json({
+      code: 500,
+      message: '更新角色菜单权限失败',
       error: error.message,
     })
   }

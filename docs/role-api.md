@@ -73,7 +73,7 @@
 
 ### 2. 获取所有角色（用于下拉选择）
 
-**GET** `/api/roles/all`
+**GET** `/api/roles-all`
 
 **查询参数：**
 - `status` (可选): 状态筛选，active 或 inactive。如果不传此参数，默认只返回启用状态的角色
@@ -105,13 +105,13 @@
 **使用示例：**
 ```javascript
 // 获取所有启用状态的角色（默认行为）
-GET /api/roles/all
+GET /api/roles-all
 
 // 获取所有角色（包括禁用状态）
-GET /api/roles/all?status=all
+GET /api/roles-all?status=all
 
 // 只获取禁用状态的角色
-GET /api/roles/all?status=inactive
+GET /api/roles-all?status=inactive
 ```
 
 ### 3. 创建角色

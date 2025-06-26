@@ -21,6 +21,10 @@ const RoleSchema = new mongoose.Schema({
     type: String,
     trim: true
   }],
+  menuIds: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Menu'
+  }],
   status: {
     type: String,
     enum: ['active', 'inactive'],
@@ -79,7 +83,7 @@ const initDefaultRoles = async (retryCount = 0) => {
         description: '普通用户，拥有基本权限',
         permissions: ['view_profile', 'edit_profile'],
         status: 'active',
-        isSystem: true
+        isSystem: false
       })
       console.log('普通用户角色创建成功')
     }
