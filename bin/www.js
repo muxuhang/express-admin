@@ -6,9 +6,10 @@
 
 import http from 'http'
 import debug from 'debug'
-import app, { setServer } from '../src/app'
-import websocketService from '../src/services/websocket'
-import { connectWithRetry } from '../src/mongodb'
+import app, { setServer } from '../src/app.js'
+import websocketService from '../src/services/websocket.js'
+import { connectWithRetry, connectionState } from '../src/mongodb.js'
+import { initDefaultRoles } from '../src/models/role.js'
 import { fetch, Headers, Request, Response } from 'undici';
 
 globalThis.fetch = fetch
@@ -37,6 +38,9 @@ const startServer = async () => {
     console.log('等待数据库连接...')
     await connectWithRetry()
     console.log('数据库连接成功，启动服务器...')
+
+    // 初始化角色
+    await initDefaultRoles()
 
     /**
      * Create HTTP server.

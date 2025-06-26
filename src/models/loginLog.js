@@ -1,7 +1,7 @@
 import mongoose from 'mongoose'
 
 const LoginLogSchema = new mongoose.Schema({
-  user_id: {
+  userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   },
@@ -9,19 +9,19 @@ const LoginLogSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  login_time: {
+  loginTime: {
     type: Date,
     default: Date.now
   },
-  ip_address: {
+  ipAddress: {
     type: String,
     required: true
   },
-  user_agent: {
+  userAgent: {
     type: String,
     required: true
   },
-  login_source: {
+  loginSource: {
     type: String,
     enum: ['pc', 'h5'],
     required: true
@@ -31,11 +31,11 @@ const LoginLogSchema = new mongoose.Schema({
     enum: ['success', 'failed'],
     required: true
   },
-  fail_reason: {
+  failReason: {
     type: String
   }
 }, {
-  timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' }
+  timestamps: { createdAt: 'createdAt', updatedAt: 'updatedAt' }
 })
 
 // 检查模型是否已经存在

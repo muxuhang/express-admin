@@ -2,6 +2,10 @@
   "name": "express-admin",
   "version": "0.0.0",
   "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=16.0.0"
+  },
   "scripts": {
     "start": "nodemon --exec babel-node ./bin/www",
     "start-project": "babel-node scripts/start-project.js",
@@ -43,6 +47,6 @@
     "@babel/node": "^7.16.8",
     "@babel/preset-env": "^7.16.11",
     "cors": "^2.8.5",
-    "mongoose": "^6.3.0"
+    "mongoose": "^8.16.0"
   }
 }
