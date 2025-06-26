@@ -1,6 +1,6 @@
 import mongoose from 'mongoose'
 import User from '../models/user.js'
-import Role from '../models/role.js'
+import { initDefaultRoles } from '../models/role.js'
 import Menu from '../models/menu.js'
 import bcrypt from 'bcryptjs'
 
@@ -15,7 +15,6 @@ const connectDB = async () => {
 
     // 初始化默认数据
     await initDefaultData()
-
   } catch (error) {
     console.error('MongoDB 连接失败:', error)
     process.exit(1)
@@ -28,7 +27,7 @@ const initDefaultData = async () => {
     console.log('开始初始化默认数据...')
 
     // 初始化默认角色
-    await Role.initDefaultRoles()
+    await initDefaultRoles()
 
     // 初始化默认菜单
     await Menu.initDefaultMenus()
@@ -44,7 +43,7 @@ const initDefaultData = async () => {
         email: 'admin@example.com',
         phone: '13800138000',
         role: 'admin',
-        status: 'active'
+        status: 'active',
       })
       console.log('默认管理员用户创建成功')
       console.log('用户名: admin')
@@ -58,4 +57,4 @@ const initDefaultData = async () => {
   }
 }
 
-export default connectDB 
+export default connectDB

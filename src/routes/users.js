@@ -11,35 +11,35 @@ router.get('/api/users', authLogin, async (req, res) => {
   try {
     const { keyword, status, page = 1, limit = 10 } = req.query
     const query = {}
-    
+
     if (keyword) {
       query.$or = [
-        { username: new RegExp(keyword, 'i') }, 
+        { username: new RegExp(keyword, 'i') },
         { email: new RegExp(keyword, 'i') },
-        { phone: new RegExp(keyword, 'i') }
+        { phone: new RegExp(keyword, 'i') },
       ]
     }
-    
+
     if (status) {
       query.status = status
     }
-    
+
     const total = await User.countDocuments(query)
     const users = await User.find(query)
       .select('-password')
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(parseInt(limit))
-    
-    res.json({ 
-      code: 0, 
-      message: '获取用户列表成功', 
-      data: { 
-        total, 
-        page: parseInt(page), 
-        limit: parseInt(limit), 
-        list: users 
-      } 
+
+    res.json({
+      code: 0,
+      message: '获取用户列表成功',
+      data: {
+        total,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        list: users,
+      },
     })
   } catch (error) {
     handleError(error, req, res)
@@ -47,12 +47,10 @@ router.get('/api/users', authLogin, async (req, res) => {
 })
 
 // 获取可用角色列表（用于用户创建/编辑时的角色选择）
-router.get('/api/users/roles', authLogin, async (req, res) => {
+router.get('/api/users-roles', authLogin, async (req, res) => {
   try {
     // 只返回启用状态的角色
-    const roles = await Role.find({ status: 'active' })
-      .sort({ createdAt: -1 })
-      .select('name code description')
+    const roles = await Role.find({ status: 'active' }).sort({ createdAt: -1 }).select('name code description')
 
     res.json({
       code: 0,
@@ -82,7 +80,7 @@ router.get('/api/users/:id', authLogin, async (req, res) => {
 router.post('/api/users', authLogin, async (req, res) => {
   try {
     const userData = req.body
-    
+
     // 检查手机号是否已存在（如果提供了手机号）
     if (userData.phone) {
       const existPhone = await User.findOne({ phone: userData.phone })
@@ -98,7 +96,7 @@ router.post('/api/users', authLogin, async (req, res) => {
         return res.status(400).json({ code: 400, message: '指定的角色不存在或已被停用' })
       }
     }
-    
+
     const user = new User(userData)
     await user.save()
     res.json({ code: 0, message: '创建用户成功', data: { ...user.toObject(), password: undefined } })
@@ -112,7 +110,7 @@ router.put('/api/users/:id', authLogin, async (req, res) => {
   try {
     const { id } = req.params
     const userData = req.body
-    
+
     // 检查手机号是否已被其他用户使用（如果提供了手机号）
     if (userData.phone) {
       const existPhone = await User.findOne({ phone: userData.phone, _id: { $ne: id } })
@@ -121,14 +119,6 @@ router.put('/api/users/:id', authLogin, async (req, res) => {
       }
     }
 
-    // 验证角色是否存在且为启用状态
-    if (userData.role) {
-      const role = await Role.findOne({ code: userData.role, status: 'active' })
-      if (!role) {
-        return res.status(400).json({ code: 400, message: '指定的角色不存在或已被停用' })
-      }
-    }
-    
     const user = await User.findById(id)
     if (!user) {
       return res.status(404).json({ code: 404, message: '用户不存在' })
@@ -146,40 +136,25 @@ router.put('/api/users/:id', authLogin, async (req, res) => {
 router.delete('/api/users/:id', authLogin, async (req, res) => {
   try {
     const { id } = req.params
+    const currentUser = req.user // 当前登录用户
+
     const user = await User.findById(id)
     if (!user) {
       return res.status(404).json({ code: 404, message: '用户不存在' })
     }
+
+    // 不能删除自己的账号
+    if (id === currentUser._id.toString()) {
+      return res.status(400).json({ code: 400, message: '不能删除自己的账号' })
+    }
+
+    // 不能删除管理员账号
+    if (user.role === 'admin') {
+      return res.status(400).json({ code: 400, message: '不能删除管理员账号' })
+    }
+
     await user.deleteOne()
     res.json({ code: 0, message: '删除用户成功' })
-  } catch (error) {
-    handleError(error, req, res)
-  }
-})
-
-// 启用/停用用户
-router.patch('/api/users/:id/status', authLogin, async (req, res) => {
-  try {
-    const { id } = req.params
-    const { status } = req.body
-    
-    if (!status || !['active', 'inactive'].includes(status)) {
-      return res.status(400).json({ code: 400, message: '状态值无效' })
-    }
-    
-    const user = await User.findById(id)
-    if (!user) {
-      return res.status(404).json({ code: 404, message: '用户不存在' })
-    }
-    
-    user.status = status
-    await user.save()
-    
-    res.json({ 
-      code: 0, 
-      message: `用户${status === 'active' ? '启用' : '停用'}成功`, 
-      data: { ...user.toObject(), password: undefined } 
-    })
   } catch (error) {
     handleError(error, req, res)
   }

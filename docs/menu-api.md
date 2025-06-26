@@ -91,7 +91,7 @@
 
 ### 2. 获取菜单树
 
-**GET** `/api/menus/tree`
+**GET** `/api/menus-tree`
 
 **查询参数：**
 - `status` (可选): 状态筛选，active 或 inactive。如果不传此参数，默认只返回启用状态的菜单
@@ -132,18 +132,18 @@
 **使用示例：**
 ```javascript
 // 获取所有启用状态的菜单树（默认行为）
-GET /api/menus/tree
+GET /api/menus-tree
 
 // 获取所有菜单树（包括禁用状态）
-GET /api/menus/tree?status=all
+GET /api/menus-tree?status=all
 
 // 只获取禁用状态的菜单树
-GET /api/menus/tree?status=inactive
+GET /api/menus-tree?status=inactive
 ```
 
 ### 3. 获取所有菜单树（用于管理）
 
-**GET** `/api/menus/tree/all`
+**GET** `/api/menus-all`
 
 **功能：** 获取所有菜单的树形结构，包括禁用状态的菜单，专门用于菜单管理页面
 
@@ -293,68 +293,9 @@ GET /api/menus/tree?status=inactive
 }
 ```
 
-### 8. 启用/停用菜单
+### 8. 初始化默认菜单
 
-**PATCH** `/api/menus/:id/status`
-
-**请求体：**
-```json
-{
-  "status": "inactive"
-}
-```
-
-**响应示例：**
-```json
-{
-  "code": 0,
-  "message": "菜单停用成功",
-  "data": {
-    "_id": "60f7b3b3b3b3b3b3b3b3b3b3",
-    "label": "首页",
-    "key": "60f7b3b3b3b3b3b3b3b3b3b3",
-    "path": "/",
-    "parentId": null,
-    "order": 1,
-    "icon": "HomeOutlined",
-    "status": "inactive",
-    "createdAt": "2023-01-01T00:00:00.000Z",
-    "updatedAt": "2023-01-01T00:00:00.000Z"
-  }
-}
-```
-
-### 9. 批量更新菜单排序
-
-**PATCH** `/api/menus/order`
-
-**请求体：**
-```json
-{
-  "orders": [
-    {
-      "id": "60f7b3b3b3b3b3b3b3b3b3b3",
-      "order": 1
-    },
-    {
-      "id": "60f7b3b3b3b3b3b3b3b3b3b4",
-      "order": 2
-    }
-  ]
-}
-```
-
-**响应示例：**
-```json
-{
-  "code": 0,
-  "message": "更新菜单排序成功"
-}
-```
-
-### 10. 初始化默认菜单
-
-**POST** `/api/menus/init`
+**POST** `/api/menusInit`
 
 **权限要求：** 仅管理员可访问
 
@@ -499,5 +440,5 @@ GET /api/menus?page=1&limit=20
 ### 初始化默认菜单
 ```javascript
 // 管理员权限
-POST /api/menus/init
+POST /api/menusInit
 ```
