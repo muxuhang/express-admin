@@ -6,8 +6,8 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0" />
     <title>API Documentation</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="./js/tailwind.js"></script>
+    <script src="./js/axios.min.js"></script>
   </head>
   <body class="bg-gray-50 p-8">
     <div class="max-w-7xl mx-auto">
@@ -40,23 +40,12 @@
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">路径</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">描述</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">默认参数</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
               </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200" id="apiTableBody">
               <!-- 表格内容将通过 JavaScript 动态生成 -->
             </tbody>
           </table>
-        </div>
-
-        <!-- 响应结果展示区域 -->
-        <div
-          id="response"
-          class="mt-8 bg-white rounded-lg shadow p-6 hidden">
-          <h3 class="text-lg font-medium text-gray-900 mb-4">响应结果</h3>
-          <pre
-            id="responseContent"
-            class="bg-gray-50 p-4 rounded-lg overflow-x-auto"></pre>
         </div>
       </div>
     </div>
@@ -157,13 +146,6 @@
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${api.description}</td>
               <td class="px-6 py-4 text-sm text-gray-500">
                 ${paramsHtml}
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                <button
-                  data-api-index="${index}"
-                  class="send-request-btn bg-${api.color}-500 hover:bg-${api.color}-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
-                  发送请求
-                </button>
               </td>
             </tr>
           `;

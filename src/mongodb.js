@@ -13,8 +13,8 @@ const MONGODB_CONFIG = {
     useUnifiedTopology: true,
     serverSelectionTimeoutMS: 5000,
     socketTimeoutMS: 45000,
-    maxPoolSize: 10,
-    minPoolSize: 5,
+    maxPoolSize: 5,
+    minPoolSize: 1,
     retryWrites: true,
     retryReads: true,
     heartbeatFrequencyMS: 2000,
@@ -39,13 +39,16 @@ const MAX_RETRIES = 300
 const RETRY_INTERVAL = 5000
 let retryCount = 0
 let isConnecting = false
+let isShuttingDown = false
 
 // 监控连接状态
 const connectionState = {
   isConnected: false,
+  isConnecting: false,
   lastError: null,
   lastConnectionAttempt: null,
   connectionAttempts: 0,
+  isShuttingDown: false,
 }
 
 // 连接Promise
@@ -53,6 +56,18 @@ let connectionPromise = null
 
 // 连接函数
 const connectWithRetry = async () => {
+  // 如果正在关闭，不进行连接
+  if (isShuttingDown || connectionState.isShuttingDown) {
+    console.log('系统正在关闭，跳过数据库连接')
+    return
+  }
+
+  // 如果已经连接，直接返回
+  if (mongoose.connection.readyState === 1) {
+    console.log('数据库已经连接')
+    return
+  }
+
   if (isConnecting) {
     console.log('已有连接尝试正在进行中...')
     return connectionPromise
@@ -63,6 +78,7 @@ const connectWithRetry = async () => {
   }
 
   isConnecting = true
+  connectionState.isConnecting = true
   connectionState.lastConnectionAttempt = new Date()
   connectionState.connectionAttempts++
 
@@ -72,11 +88,19 @@ const connectWithRetry = async () => {
 
       await mongoose.connect(MONGODB_CONFIG.url, {
         ...MONGODB_CONFIG.options,
-        user: MONGODB_CONFIG.username,
-        pass: MONGODB_CONFIG.password,
+      })
+
+      // 等待连接完全建立
+      await new Promise((resolve) => {
+        if (mongoose.connection.readyState === 1) {
+          resolve()
+        } else {
+          mongoose.connection.once('connected', resolve)
+        }
       })
 
       connectionState.isConnected = true
+      connectionState.isConnecting = false
       connectionState.lastError = null
       console.log('数据库连接成功')
       const port = process.env.PORT || 3000
@@ -87,6 +111,7 @@ const connectWithRetry = async () => {
       resolve()
     } catch (error) {
       connectionState.lastError = error
+      connectionState.isConnecting = false
       console.error('MongoDB 连接错误:', error.message)
 
       if (retryCount < MAX_RETRIES - 1) {
@@ -135,17 +160,26 @@ setInterval(monitorConnection, 30000)
 
 db.on('connected', () => {
   connectionState.isConnected = true
+  connectionState.isConnecting = false
   console.log('MongoDB 连接已建立')
 })
 
 db.on('disconnected', () => {
   connectionState.isConnected = false
+  connectionState.isConnecting = false
   console.log('MongoDB 连接已断开')
+  
   // 重置连接Promise，允许重新连接
   connectionPromise = null
-  // 如果不是主动断开，尝试重连
-  if (!connectionState.isConnecting) {
-    connectWithRetry()
+  
+  // 如果不是主动断开且不在关闭过程中，尝试重连
+  if (!isShuttingDown && !connectionState.isShuttingDown) {
+    console.log('尝试重新连接数据库...')
+    setTimeout(() => {
+      connectWithRetry().catch(error => {
+        console.error('重连失败:', error.message)
+      })
+    }, 1000)
   }
 })
 
@@ -157,6 +191,9 @@ db.on('error', (error) => {
 // 优雅关闭
 const gracefulShutdown = async (signal) => {
   console.log(`收到 ${signal} 信号，准备关闭数据库连接...`)
+  isShuttingDown = true
+  connectionState.isShuttingDown = true
+  
   try {
     await mongoose.connection.close()
     console.log('MongoDB 连接已安全关闭')
@@ -175,17 +212,20 @@ process.on('SIGQUIT', () => gracefulShutdown('SIGQUIT'))
 // 未捕获的异常处理
 process.on('uncaughtException', (error) => {
   console.error('未捕获的异常:', error)
-  gracefulShutdown('uncaughtException')
+  // 只有在非连接相关错误时才关闭
+  if (!error.message.includes('connection') && !error.message.includes('MongoDB')) {
+    gracefulShutdown('uncaughtException')
+  }
 })
 
 // 未处理的 Promise 拒绝
 process.on('unhandledRejection', (reason, promise) => {
   console.error('未处理的 Promise 拒绝:', reason)
-  gracefulShutdown('unhandledRejection')
+  // 只有在非连接相关错误时才关闭
+  if (!reason.message?.includes('connection') && !reason.message?.includes('MongoDB')) {
+    gracefulShutdown('unhandledRejection')
+  }
 })
-
-// 启动连接
-connectWithRetry()
 
 // 导出 mongoose 实例、连接状态和连接Promise
 export { connectionState, connectWithRetry }

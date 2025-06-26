@@ -2,21 +2,37 @@ import express from 'express'
 import fs from 'fs'
 import path from 'path'
 import handleError from '../utils/handleError.js'
+import authLogin from '../middleware/authLogin.js'
 
 const router = express.Router()
 
 const permissionsFile = path.join(process.cwd(), 'jsons', 'permissions.json')
 
 // 获取权限列表
-router.get('/api/permissions', (req, res) => {
+router.get('/api/permissions', authLogin, (req, res) => {
   try {
+    const { page = 1, limit = 10 } = req.query
+    
     if (!fs.existsSync(permissionsFile)) {
       fs.writeFileSync(permissionsFile, '[]', 'utf-8')
     }
     const content = fs.readFileSync(permissionsFile, 'utf-8')
+    const allPermissions = JSON.parse(content)
+    
+    // 计算分页
+    const total = allPermissions.length
+    const startIndex = (page - 1) * limit
+    const endIndex = startIndex + parseInt(limit)
+    const permissions = allPermissions.slice(startIndex, endIndex)
+    
     res.json({
       code: 0,
-      data: JSON.parse(content),
+      data: {
+        total,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        list: permissions,
+      },
       message: '获取权限列表成功',
     })
   } catch (err) {
@@ -25,7 +41,7 @@ router.get('/api/permissions', (req, res) => {
 })
 
 // 新增权限
-router.post('/api/permissions', (req, res) => {
+router.post('/api/permissions', authLogin, (req, res) => {
   try {
     let permissions = []
     if (fs.existsSync(permissionsFile)) {
@@ -50,7 +66,7 @@ router.post('/api/permissions', (req, res) => {
 })
 
 // 删除权限
-router.delete('/api/permissions/:name', (req, res) => {
+router.delete('/api/permissions/:name', authLogin, (req, res) => {
   try {
     let permissions = []
     if (fs.existsSync(permissionsFile)) {

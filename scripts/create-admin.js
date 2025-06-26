@@ -61,7 +61,9 @@ const createAdmin = async () => {
       username: 'admin',
       password: hashedPassword,
       email: 'admin@example.com',
-      role: 'admin'
+      phone: '13800138000', // 默认手机号
+      role: 'admin',
+      status: 'active'
     });
 
     await admin.save();

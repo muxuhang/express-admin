@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken'
+import User from '../models/user.js'
 import Role from '../models/role.js'
 import handleError from '../utils/handleError.js'
 /**
@@ -20,17 +21,24 @@ const checkPermissions = (requiredPermissions) => {
       } catch (error) {
         return res.status(401).json({ code: 401, message: '无效的token' })
       }
+      
       // 获取用户信息
-      const user = await Role.findById(payload.id).select('username role').lean().exec()
+      const user = await User.findById(payload.id).select('username role status').lean().exec()
       if (!user) {
         return res.status(404).json({ code: 404, message: '用户不存在' })
       }
+
+      // 检查用户状态
+      if (user.status === 'inactive') {
+        return res.status(403).json({ code: 403, message: '账户已被停用，无权限访问' })
+      }
+
       // 获取用户角色
       const roleCode = user.role || payload.role
-      const role = await Role.findOne({ code: roleCode })
+      const role = await Role.findOne({ code: roleCode, status: 'active' })
 
       if (!role) {
-        return res.status(403).json({ code: 403, message: '用户角色无效' })
+        return res.status(403).json({ code: 403, message: '用户角色无效或已被停用' })
       }
 
       // 检查权限

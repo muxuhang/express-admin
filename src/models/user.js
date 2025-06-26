@@ -15,10 +15,29 @@ const UserSchema = new mongoose.Schema({
     required: true,
     unique: true,
   },
+  phone: {
+    type: String,
+    unique: true,
+    sparse: true, // 允许空值，但如果有值则必须唯一
+    validate: {
+      validator: function(v) {
+        // 如果手机号为空，则验证通过
+        if (!v) return true
+        // 如果手机号不为空，则验证格式
+        return /^1\d{10}$/.test(v)
+      },
+      message: '手机号格式不正确'
+    }
+  },
   role: {
     type: String,
-    enum: ['admin', 'user'],
     default: 'user',
+    select: true
+  },
+  status: {
+    type: String,
+    enum: ['active', 'inactive'],
+    default: 'active',
     select: true
   },
   createdAt: {
@@ -28,6 +47,10 @@ const UserSchema = new mongoose.Schema({
   updatedAt: {
     type: Date,
     default: Date.now,
+  },
+  lastLoginAt: {
+    type: Date,
+    default: null,
   },
 })
 

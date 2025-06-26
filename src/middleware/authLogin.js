@@ -1,6 +1,7 @@
+import jwt from 'jsonwebtoken'
 import User from '../models/user.js'
+import Role from '../models/role.js'
 import handleError from '../utils/handleError.js'
-import { verifyToken } from '../utils/jwt.js'
 
 /**
  * 用户登录验证中间件
@@ -34,55 +35,66 @@ import { verifyToken } from '../utils/jwt.js'
  */
 const authLogin = async (req, res, next) => {
   try {
-    // 检查请求头中的 Bearer token
-    const auth = req.headers.authorization
-    if (!auth || !auth.startsWith('Bearer ')) {
-      return res.status(401).json({
-        code: 401,
-        message: '未授权',
-        error: 'Missing or invalid authorization header',
-      })
-    }
-
-    // 提取并验证 token
-    const token = auth.replace('Bearer ', '')
+    const token = req.headers.authorization?.replace('Bearer ', '')
+    
     if (!token) {
       return res.status(401).json({
         code: 401,
-        message: '未授权',
-        error: 'Empty token',
+        message: '未提供认证令牌'
       })
     }
 
-    let payload
-    try {
-      payload = verifyToken(req)
-    } catch (jwtError) {
-      return res.status(401).json({
-        code: 401,
-        message: '无效的token',
-        error: jwtError.message,
-      })
-    }
-
-    // 查询用户信息
-    const user = await User.findById(payload.id).select('username role').lean().exec()
-
-    // 验证用户是否存在
+    const decoded = jwt.verify(token, process.env.JWT_SECRET)
+    
+    // 从数据库查找用户信息，确保获取最新状态
+    const user = await User.findById(decoded.userId).select('+password')
     if (!user) {
       return res.status(401).json({
         code: 401,
-        message: '用户不存在',
-        error: 'User not found',
+        message: '用户不存在'
       })
     }
 
-    // 将用户信息添加到请求对象中
+    // 检查用户状态
+    if (user.status !== 'active') {
+      return res.status(403).json({
+        code: 403,
+        message: '用户已被停用'
+      })
+    }
+
+    // 检查角色状态
+    if (user.role) {
+      const role = await Role.findOne({ code: user.role })
+      if (role && role.status !== 'active') {
+        return res.status(403).json({
+          code: 403,
+          message: '用户角色已被停用'
+        })
+      }
+    }
+
     req.user = user
     next()
-  } catch (err) {
-    handleError(err, req, res)
+  } catch (error) {
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({
+        code: 401,
+        message: '无效的认证令牌'
+      })
+    }
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({
+        code: 401,
+        message: '认证令牌已过期'
+      })
+    }
+    return res.status(500).json({
+      code: 500,
+      message: '认证失败',
+      error: error.message
+    })
   }
 }
 
-export default authLogin 
+export default authLogin

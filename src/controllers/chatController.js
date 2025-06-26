@@ -18,14 +18,14 @@ class ChatController {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
         return res.status(400).json({
-          success: false,
+          code: 400,
           message: '请求参数错误',
           errors: errors.array()
         });
       }
 
       const { message, context } = req.body;
-      const userId = req.user?.id || req.body.userId || 'anonymous';
+      const userId = req.user?.id || req.query.userId || 'anonymous';
 
       console.log(`开始处理用户 ${userId} 的本地 AI 聊天流式请求`);
 
@@ -66,8 +66,16 @@ class ChatController {
       this.checkConnection();
 
       const userId = req.user?.id || req.query.userId || 'anonymous';
+      const { page = 1, limit = 10 } = req.query;
       
-      const history = localAIChatService.getHistory(userId);
+      console.log('userId', userId);
+      const allHistory = localAIChatService.getHistory(userId);
+
+      // 计算分页
+      const total = allHistory.length;
+      const startIndex = (page - 1) * limit;
+      const endIndex = startIndex + parseInt(limit);
+      const history = allHistory.slice(startIndex, endIndex);
 
       // 设置缓存控制头，确保每次都获取最新数据
       res.set({
@@ -77,8 +85,14 @@ class ChatController {
       });
 
       res.json({
-        success: true,
-        data: history
+        code: 0,
+        data: {
+          total,
+          page: parseInt(page),
+          limit: parseInt(limit),
+          list: history
+        },
+        message: '获取历史记录成功'
       });
 
     } catch (error) {
@@ -86,13 +100,13 @@ class ChatController {
       
       if (error.message === '数据库未连接') {
         return res.status(503).json({
-          success: false,
+          code: 503,
           message: '数据库服务暂时不可用，请稍后重试'
         });
       }
       
       res.status(500).json({
-        success: false,
+        code: 500,
         message: '获取历史记录失败'
       });
     }
@@ -104,12 +118,12 @@ class ChatController {
       // 检查数据库连接
       this.checkConnection();
 
-      const userId = req.user?.id || req.body.userId || 'anonymous';
+      const userId = req.user?.id || req.query.userId || 'anonymous';
       
       localAIChatService.clearHistory(userId);
 
       res.json({
-        success: true,
+        code: 0,
         message: '对话历史已清除'
       });
 
@@ -118,13 +132,13 @@ class ChatController {
       
       if (error.message === '数据库未连接') {
         return res.status(503).json({
-          success: false,
+          code: 503,
           message: '数据库服务暂时不可用，请稍后重试'
         });
       }
       
       res.status(500).json({
-        success: false,
+        code: 500,
         message: '清除历史记录失败'
       });
     }

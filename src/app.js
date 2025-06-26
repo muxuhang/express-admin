@@ -1,6 +1,4 @@
 import dotenv from 'dotenv'
-dotenv.config()
-
 import express from 'express'
 import path from 'path'
 import cookieParser from 'cookie-parser'
@@ -8,31 +6,53 @@ import logger from 'morgan'
 import bodyParser from 'body-parser'
 import cors from 'cors'
 import ejs from 'ejs'
-import './mongodb'
+import { fileURLToPath } from 'url'
+import { dirname } from 'path'
+import './mongodb.js'
 import routerList from './routes/index.js'
-import { AppError } from './utils/handleError'
+import { AppError } from './utils/handleError.js'
 import helmet from 'helmet'
 import rateLimit from 'express-rate-limit'
-import chatRoutes from './routes/chat.js'
+import Menu from './models/menu.js'
+
+// ES Module 中获取 __dirname 和 __filename
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
+
+dotenv.config()
 
 var app = express()
 
-// 安全相关中间件
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      imgSrc: ["'self'", "data:", "https:"],
-      connectSrc: ["'self'", "ws:", "wss:"],
-      fontSrc: ["'self'"],
-      objectSrc: ["'none'"],
-      mediaSrc: ["'self'"],
-      frameSrc: ["'none'"]
-    }
+// 初始化默认菜单
+const initDefaultMenus = async () => {
+  try {
+    await Menu.initDefaultMenus()
+  } catch (error) {
+    console.error('初始化默认菜单失败:', error)
   }
-}))
+}
+
+// 应用启动时初始化默认菜单
+initDefaultMenus()
+
+// 安全相关中间件
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["'self'", 'data:', 'https:'],
+        connectSrc: ["'self'", 'ws:', 'wss:'],
+        fontSrc: ["'self'"],
+        objectSrc: ["'none'"],
+        mediaSrc: ["'self'"],
+        frameSrc: ["'none'"],
+      },
+    },
+  })
+)
 app.use(cors()) // 配置 CORS
 
 // 限制请求速率
@@ -67,16 +87,10 @@ app.use(
 // 添加 public 目录的静态文件配置
 app.use(express.static(path.join(__dirname, '../public')))
 
-// 添加 js 目录的静态文件配置
-app.use('/js', express.static(path.join(__dirname, 'views/js')))
-
 // API 路由配置
 routerList.forEach((router) => {
   app.use('/', router)
 })
-
-// 添加聊天路由
-app.use('/api/chat', chatRoutes)
 
 // 404 错误处理
 app.use((req, res, next) => {

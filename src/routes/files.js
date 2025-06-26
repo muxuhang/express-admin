@@ -1,7 +1,7 @@
 import express from 'express'
 import fs from 'fs'
 import path from 'path'
-import handleError from '../utils/handleError'
+import handleError from '../utils/handleError.js'
 
 const router = express.Router()
 
@@ -9,6 +9,7 @@ const router = express.Router()
 router.get('/api/public/:folder/:filename?', (req, res) => {
   try {
     const { folder, filename } = req.params
+    const { page = 1, limit = 10 } = req.query
     const publicDir = path.join(process.cwd(), 'public')
     const targetPath = filename ? path.join(publicDir, folder, filename) : path.join(publicDir, folder)
 
@@ -26,7 +27,7 @@ router.get('/api/public/:folder/:filename?', (req, res) => {
     // 如果是目录，返回目录内容
     if (stats.isDirectory()) {
       const files = fs.readdirSync(targetPath)
-      const fileList = files.map((file) => {
+      const allFileList = files.map((file) => {
         const filePath = path.join(targetPath, file)
         const fileStats = fs.statSync(filePath)
         return {
@@ -38,9 +39,20 @@ router.get('/api/public/:folder/:filename?', (req, res) => {
         }
       })
 
+      // 计算分页
+      const total = allFileList.length
+      const startIndex = (page - 1) * limit
+      const endIndex = startIndex + parseInt(limit)
+      const fileList = allFileList.slice(startIndex, endIndex)
+
       return res.json({
         code: 0,
-        data: fileList,
+        data: {
+          total,
+          page: parseInt(page),
+          limit: parseInt(limit),
+          list: fileList,
+        },
         message: '获取文件列表成功',
       })
     }
