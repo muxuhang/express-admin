@@ -13,7 +13,8 @@ export const isEmpty = (str) => {
  * @returns {boolean} - 如果格式正确返回true，否则返回false
  */
 export const isValidUsername = (username) => {
-  return username && typeof username === 'string' && username.length >= 3 && username.length <= 32
+  if (!username || typeof username !== 'string') return false
+  return username.length >= 3 && username.length <= 32
 }
 
 /**
@@ -22,7 +23,8 @@ export const isValidUsername = (username) => {
  * @returns {boolean} - 如果格式正确返回true，否则返回false
  */
 export const isValidPassword = (password) => {
-  return password && typeof password === 'string' && password.length >= 6
+  if (!password || typeof password !== 'string') return false
+  return password.length >= 6
 }
 
 /**
@@ -31,8 +33,10 @@ export const isValidPassword = (password) => {
  * @returns {boolean} - 如果格式正确返回true，否则返回false
  */
 export const isValidEmail = (email) => {
-  if (!email) return true // 邮箱是可选的
-  return typeof email === 'string' && /^[\w.-]+@[\w.-]+\.\w+$/.test(email)
+  if (email === '') return true // 可选字段，空字符串允许
+  if (!email || typeof email !== 'string') return false
+  // 支持 + 号
+  return /^[\w.+-]+@[\w.-]+\.\w+$/.test(email)
 }
 
 /**
@@ -41,5 +45,6 @@ export const isValidEmail = (email) => {
  * @returns {boolean} - 如果格式正确返回true，否则返回false
  */
 export const isValidPhone = (phone) => {
-  return phone && typeof phone === 'string' && /^1\d{10}$/.test(phone)
+  if (!phone || typeof phone !== 'string') return false
+  return /^1\d{10}$/.test(phone)
 }

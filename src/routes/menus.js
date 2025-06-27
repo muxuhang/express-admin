@@ -1,6 +1,5 @@
 import express from 'express'
 import Menu from '../models/menu.js'
-import Role from '../models/role.js'
 import handleError from '../utils/handleError.js'
 import authLogin from '../middleware/authLogin.js'
 
@@ -58,104 +57,12 @@ router.get('/api/menus-tree', authLogin, async (req, res) => {
       query.status = 'active'
     }
 
-    // 获取当前用户的角色信息
-    const userRole = req.user.role
-    console.log('用户角色:', userRole)
+    // 直接获取所有符合条件的菜单
+    const menus = await Menu.find(query).sort({ order: 1, createdAt: -1 })
 
-    // 所有用户（包括管理员）都根据角色权限获取菜单
-    console.log('根据角色权限获取菜单')
-
-    // 查找用户角色
-    const role = await Role.findOne({ code: userRole, status: 'active' })
-    if (!role) {
-      return res.status(403).json({
-        code: 403,
-        message: '用户角色不存在或已被停用',
-      })
-    }
-
-    console.log('用户角色信息:', role.name, '菜单权限数量:', role.menuIds?.length || 0)
-
-    // 获取角色关联的菜单ID
-    const menuIds = role.menuIds || []
-
-    if (menuIds.length === 0) {
-      // 如果角色没有分配任何菜单权限，返回空数组
-      console.log('角色没有菜单权限')
-      res.json({
-        code: 0,
-        message: '获取菜单树成功',
-        data: [],
-      })
-      return
-    }
-
-    console.log('原始角色菜单ID:', menuIds)
-
-    // 获取所有菜单用于权限计算
-    const allMenus = await Menu.find(query).sort({ order: 1, createdAt: -1 })
-
-    // 计算最终有权限的菜单ID
-    const finalMenuIds = new Set(menuIds.map((id) => id.toString()))
-
-    // 1. 如果选择了父菜单，自动添加所有子菜单
-    for (const menuId of menuIds) {
-      const menu = allMenus.find((m) => m._id.toString() === menuId.toString())
-      if (menu) {
-        // 递归添加所有子菜单
-        const addChildren = (parentId) => {
-          const children = allMenus.filter((m) => m.parentId && m.parentId.toString() === parentId.toString())
-          for (const child of children) {
-            finalMenuIds.add(child._id.toString())
-            addChildren(child._id)
-          }
-        }
-        addChildren(menu._id)
-      }
-    }
-
-    // 2. 如果选择了子菜单，自动添加所有父菜单（但不添加其他子菜单）
-    for (const menuId of menuIds) {
-      const menu = allMenus.find((m) => m._id.toString() === menuId.toString())
-      if (menu) {
-        finalMenuIds.add(menu._id.toString()) // 加入当前菜单
-
-        // 向上递归添加所有父菜单
-        let current = menu
-        while (current.parentId) {
-          const parent = allMenus.find((m) => m._id.toString() === current.parentId.toString())
-          if (parent) {
-            finalMenuIds.add(parent._id.toString())
-            current = parent
-          } else {
-            break
-          }
-        }
-      }
-    }
-
-    const finalMenuIdsArray = Array.from(finalMenuIds)
-    console.log('最终菜单ID（包含父菜单和子菜单）:', finalMenuIdsArray)
-
-    // 根据最终权限获取菜单
-    const menus = await Menu.find({
-      ...query,
-      _id: { $in: finalMenuIdsArray },
-    }).sort({ order: 1, createdAt: -1 })
-
-    console.log('根据权限获取的菜单数量:', menus.length)
-    console.log(
-      '菜单详情:',
-      menus.map((m) => ({ id: m._id, label: m.label, parentId: m.parentId, status: m.status }))
-    )
-
-    // 构建树形结构 - 只包含有权限的菜单
+    // 构建树形结构
     const buildTree = (items, parentId = null) => {
       const filteredItems = items.filter((item) => String(item.parentId) === String(parentId))
-      console.log(
-        `构建树形结构 - parentId: ${parentId}, 找到 ${filteredItems.length} 个菜单:`,
-        filteredItems.map((item) => ({ id: item._id, label: item.label }))
-      )
 
       return filteredItems.map((item) => ({
         ...item.toObject(),
@@ -164,7 +71,7 @@ router.get('/api/menus-tree', authLogin, async (req, res) => {
     }
 
     const treeData = buildTree(menus)
-    console.log('最终菜单树:', treeData)
+    console.log('最终菜单树:', treeData.length)
 
     res.json({
       code: 0,
@@ -192,7 +99,6 @@ router.get('/api/menus-all', authLogin, async (req, res) => {
     }
 
     const treeData = buildTree(menus)
-    console.log(treeData)
 
     res.json({
       code: 0,
@@ -299,6 +205,65 @@ router.put('/api/menus/:id', authLogin, async (req, res) => {
 
     const updatedMenu = await Menu.findById(id)
     res.json({ code: 0, message: '更新菜单成功', data: updatedMenu })
+  } catch (error) {
+    handleError(error, req, res)
+  }
+})
+
+// 批量更新菜单排序
+router.put('/api/menus-order', authLogin, async (req, res) => {
+  try {
+    const { menuOrders, parentId = null } = req.body
+
+    // 验证请求数据
+    if (!Array.isArray(menuOrders)) {
+      return res.status(400).json({
+        code: 400,
+        message: '请求数据格式错误，menuOrders 必须是数组',
+      })
+    }
+
+    // 验证每个菜单项的数据格式
+    for (const item of menuOrders) {
+      if (!item.id || typeof item.order !== 'number') {
+        return res.status(400).json({
+          code: 400,
+          message: '菜单排序数据格式错误，每个项目必须包含 id 和 order 字段',
+        })
+      }
+    }
+
+    // 批量更新菜单排序
+    const updatePromises = menuOrders.map(async (item) => {
+      try {
+        const result = await Menu.findByIdAndUpdate(item.id, { order: item.order }, { new: true })
+        return result
+      } catch (error) {
+        console.error(`更新菜单 ${item.id} 排序失败:`, error)
+        throw new Error(`菜单 ${item.id} 不存在或更新失败`)
+      }
+    })
+
+    // 获取更新后的完整菜单树（与 menus-all 接口保持一致）
+    const allMenus = await Menu.find().sort({ order: 1, createdAt: -1 })
+
+    // 构建树形结构
+    const buildTree = (items, parentId = null) => {
+      return items
+        .filter((item) => String(item.parentId) === String(parentId))
+        .map((item) => ({
+          ...item.toObject(),
+          children: buildTree(items, item._id),
+        }))
+    }
+
+    const treeData = buildTree(allMenus)
+
+    res.json({
+      code: 0,
+      message: '菜单排序更新成功',
+      data: treeData,
+    })
   } catch (error) {
     handleError(error, req, res)
   }
