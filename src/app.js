@@ -15,9 +15,19 @@ import helmet from 'helmet'
 import rateLimit from 'express-rate-limit'
 import Menu from './models/menu.js'
 
-// ES Module 中获取 __dirname 和 __filename
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = dirname(__filename)
+// 兼容 Jest、Babel、Node 原生环境的 __filename/__dirname
+let __filename, __dirname
+
+// 检查是否在测试环境中
+if (process.env.NODE_ENV === 'test' || typeof import.meta === 'undefined') {
+  // Jest 或 Babel 环境
+  __filename = path.resolve(process.cwd(), 'src/app.js')
+  __dirname = path.resolve(process.cwd(), 'src')
+} else {
+  // Node 原生 ESM 环境
+  __filename = fileURLToPath(import.meta.url)
+  __dirname = dirname(__filename)
+}
 
 dotenv.config()
 
