@@ -14,6 +14,7 @@ import { AppError } from './utils/handleError.js'
 import helmet from 'helmet'
 import rateLimit from 'express-rate-limit'
 import Menu from './models/menu.js'
+import pusherService from './services/pusher.js'
 
 // 兼容 Jest、Babel、Node 原生环境的 __filename/__dirname
 let __filename, __dirname
@@ -42,8 +43,47 @@ const initDefaultMenus = async () => {
   }
 }
 
-// 应用启动时初始化默认菜单
-initDefaultMenus()
+// 应用启动时初始化
+const initializeApp = async () => {
+  await initDefaultMenus()
+  
+  // 启动推送任务调度器
+  startPushTaskScheduler()
+}
+
+// 启动推送任务调度器
+const startPushTaskScheduler = () => {
+  console.log('🚀 启动推送任务调度器...')
+  
+  // 每30秒检查一次定时任务和循环任务
+  const schedulerInterval = setInterval(async () => {
+    try {
+      // 执行定时任务
+      await pusherService.executeScheduledTasks()
+      
+      // 执行循环任务
+      await pusherService.executeRecurringTasks()
+    } catch (error) {
+      console.error('执行推送任务失败:', error)
+    }
+  }, 30000) // 30秒检查一次
+  
+  // 应用关闭时清理定时器
+  process.on('SIGINT', () => {
+    clearInterval(schedulerInterval)
+    console.log('推送任务调度器已停止')
+  })
+  
+  process.on('SIGTERM', () => {
+    clearInterval(schedulerInterval)
+    console.log('推送任务调度器已停止')
+  })
+  
+  console.log('✅ 推送任务调度器启动成功，每30秒检查一次任务')
+}
+
+// 执行初始化
+initializeApp()
 
 // 安全相关中间件
 app.use(
