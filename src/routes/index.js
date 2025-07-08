@@ -6,5 +6,6 @@ import files from './files.js'
 import pusher from './pusher.js'
 import chat from './chat.js'
 import menus from './menus.js'
+import articles from './articles.js'
 
-export default [login, users, roles, permissions, files, pusher, chat, menus]
+export default [login, users, roles, permissions, files, pusher, chat, menus, articles]

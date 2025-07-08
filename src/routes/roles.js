@@ -222,6 +222,51 @@ router.post('/api/roles/init', authLogin, async (req, res) => {
   }
 })
 
+// 删除角色
+router.delete('/api/roles/:id', authLogin, async (req, res) => {
+  try {
+    const { id } = req.params
+
+    const role = await Role.findById(id)
+    if (!role) {
+      return res.status(404).json({
+        code: 404,
+        message: '角色不存在',
+      })
+    }
+
+    // 检查是否为系统角色
+    if (role.isSystem) {
+      return res.status(403).json({
+        code: 403,
+        message: '系统角色不能删除',
+      })
+    }
+
+    // 检查是否有用户使用该角色
+    const usersWithRole = await User.find({ role: role.code })
+    if (usersWithRole.length > 0) {
+      return res.status(400).json({
+        code: 400,
+        message: '该角色下还有用户，不能删除',
+      })
+    }
+
+    await Role.findByIdAndDelete(id)
+
+    res.json({
+      code: 0,
+      message: '删除角色成功',
+    })
+  } catch (error) {
+    res.status(500).json({
+      code: 500,
+      message: '删除角色失败',
+      error: error.message,
+    })
+  }
+})
+
 // 获取角色菜单权限
 router.get('/api/roles/:id/menus', authLogin, async (req, res) => {
   try {

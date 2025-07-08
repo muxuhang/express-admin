@@ -8,6 +8,8 @@
   },
   "scripts": {
     "start": "nodemon --exec babel-node ./bin/www",
+    "dev": "./start-dev.sh",
+    "prod": "./start-prod.sh",
     "start-project": "babel-node scripts/start-project.js",
     "lint": "eslint .",
     "test": "jest",
@@ -18,11 +20,14 @@
     "test:run:watch": "node scripts/run-tests.js --watch",
     "test:run:coverage": "node scripts/run-tests.js --coverage",
     "test:run:ci": "node scripts/run-tests.js --ci",
+    "test:openrouter": "babel-node test-openrouter.js",
     "create-admin": "babel-node scripts/create-admin.js",
     "setup-env": "babel-node scripts/setup-env.js",
     "setup-ollama": "babel-node scripts/setup-ollama.js",
     "optimize-ollama": "babel-node scripts/optimize-ollama.js",
-    "reduce-lag": "babel-node scripts/reduce-lag.js"
+    "reduce-lag": "babel-node scripts/reduce-lag.js",
+    "fix-recurring-tasks": "babel-node scripts/fix-recurring-tasks.js",
+    "test-recurring-status": "babel-node scripts/test-recurring-status.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",
@@ -43,6 +48,7 @@
     "nodemailer": "^7.0.3",
     "nodemon": "^3.1.10",
     "ollama": "^0.4.7",
+    "openai": "^4.104.0",
     "pusher": "^5.2.0",
     "pusher-js": "^8.4.0",
     "regenerator-runtime": "^0.14.1",

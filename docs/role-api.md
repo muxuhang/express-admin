@@ -118,17 +118,6 @@ GET /api/roles-all?status=inactive
 
 **POST** `/api/roles`
 
-**请求体：**
-```json
-{
-  "name": "编辑员",
-  "code": "editor",
-  "description": "内容编辑员，拥有编辑权限",
-  "permissions": ["view_content", "edit_content", "publish_content"],
-  "status": "active"
-}
-```
-
 **响应示例：**
 ```json
 {

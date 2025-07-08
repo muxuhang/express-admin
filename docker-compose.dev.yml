@@ -1,0 +1,70 @@
+services:
+  # MongoDB 数据库
+  mongo:
+    image: mongo
+    restart: always
+    ports:
+      - 27017:27017
+    volumes:
+      - ./db2:/data/db
+    environment:
+      TZ: Asia/Shanghai
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+
+  # MongoDB 管理界面
+  mongo-express:
+    image: mongo-express
+    depends_on:
+      - mongo
+    restart: always
+    ports:
+      - 8081:8081
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: example
+      ME_CONFIG_MONGODB_URL: mongodb://root:example@mongo:27017/
+
+  # 后端服务 (开发版)
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: express-admin-backend-dev
+    restart: always
+    ports:
+      - "8888:8888"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - MONGODB_URI=mongodb://root:example@mongo:27017/admin?authSource=admin
+    depends_on:
+      - mongo
+    command: npm start
+
+  # 前端服务 (开发版)
+  frontend:
+    build:
+      context: ../cacti-admin
+      dockerfile: Dockerfile.dev
+    container_name: cacti-admin-frontend-dev
+    restart: always
+    ports:
+      - "3333:3333"
+    volumes:
+      - ../cacti-admin:/app
+      - /app/node_modules
+      - /app/.package.json.installed
+    environment:
+      - REACT_APP_API_URL=http://localhost:8888
+      - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true
+    depends_on:
+      - backend
+    command: ./start-dev.sh
+
+volumes:
+  ollama_data:
+    driver: local 

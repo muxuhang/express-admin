@@ -1,0 +1,96 @@
+version: '3.1'
+
+services:
+  # MongoDB 数据库
+  mongo:
+    image: mongo
+    restart: always
+    ports:
+      - 27017:27017
+    volumes:
+      - ./db2:/data/db
+    environment:
+      TZ: Asia/Shanghai
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+
+  # MongoDB 管理界面
+  mongo-express:
+    image: mongo-express
+    depends_on:
+      - mongo
+    restart: always
+    ports:
+      - 8081:8081
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: example
+      ME_CONFIG_MONGODB_URL: mongodb://root:example@mongo:27017/
+
+  # Ollama AI 服务
+  # ollama:
+  #   image: ollama/ollama:latest
+  #   container_name: ollama
+  #   restart: unless-stopped
+  #   ports:
+  #     - "11434:11434"
+  #   volumes:
+  #     - ollama_data:/root/.ollama
+  #   environment:
+  #     - OLLAMA_HOST=0.0.0.0
+  #     - OLLAMA_ORIGINS=*
+  #     - OLLAMA_NUM_PARALLEL=1
+  #     - OLLAMA_KEEP_ALIVE=2m
+  #     - OLLAMA_GPU_LAYERS=0
+  #     - OLLAMA_CPU_ONLY=true
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         memory: 6G
+  #         cpus: '2.0'
+  #       reservations:
+  #         memory: 1G
+  #         cpus: '0.5'
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+  #     start_period: 40s
+
+  # 后端服务 (生产版)
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    container_name: express-admin-backend-prod
+    restart: always
+    ports:
+      - "8888:8888"
+    environment:
+      - NODE_ENV=production
+      - MONGODB_URI=mongodb://root:example@mongo:27017/admin?authSource=admin
+      - OLLAMA_BASE_URL=http://ollama:11434
+    depends_on:
+      - mongo
+      - ollama
+
+  # Nginx 服务 (用于提供前端静态文件)
+  nginx:
+    build:
+      context: .
+      dockerfile: Dockerfile.nginx
+    container_name: cacti-admin-nginx-prod
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - backend
+
+volumes:
+  ollama_data:
+    driver: local 
