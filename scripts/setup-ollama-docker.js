@@ -106,13 +106,6 @@ async function main() {
     return;
   }
   
-  console.log('\n📥 推荐的模型:');
-  const recommendedModels = [
-    'qwen2.5:7b - 通义千问2.5 7B模型，中文效果好，资源占用适中'
-  ];
-  
-  recommendedModels.forEach(model => console.log(`   • ${model}`));
-  
   console.log('\n🚀 启动 Ollama 服务:');
   console.log('1. 启动 Ollama 容器:');
   console.log('   docker-compose -f docker-compose.ollama.yml up -d');
@@ -121,14 +114,6 @@ async function main() {
   console.log('\n3. 查看日志:');
   console.log('   docker-compose -f docker-compose.ollama.yml logs -f ollama');
   
-  console.log('\n📥 下载模型:');
-  console.log('1. 进入容器:');
-  console.log('   docker exec -it ollama bash');
-  console.log('\n2. 下载模型:');
-  console.log('   ollama pull qwen2.5:7b');
-  console.log('\n3. 验证模型:');
-  console.log('   ollama list');
-  
   console.log('\n🌐 访问服务:');
   console.log('• Ollama API: http://localhost:11434');
   console.log('• Ollama Web UI: http://localhost:3001');
@@ -136,7 +121,7 @@ async function main() {
   console.log('\n⚙️  环境变量配置:');
   console.log('在 .env 文件中添加以下配置:');
   console.log('OLLAMA_HOST=http://localhost:11434');
-  console.log('OLLAMA_MODEL=qwen2.5:7b');
+  console.log('OLLAMA_MODEL=llama3.2:3b');
   
   // 检查 .env 文件是否存在
   const envPath = path.join(process.cwd(), '.env');
@@ -146,7 +131,7 @@ async function main() {
     
     // 检查是否已有 Ollama 配置
     if (!envContent.includes('OLLAMA_HOST')) {
-      envContent += '\n# Ollama Docker 配置\nOLLAMA_HOST=http://localhost:11434\nOLLAMA_MODEL=qwen2.5:7b\n';
+      envContent += '\n# Ollama Docker 配置\nOLLAMA_HOST=http://localhost:11434\nOLLAMA_MODEL=llama3.2:3b\n';
       fs.writeFileSync(envPath, envContent);
       console.log('✅ 已添加 Ollama 配置到 .env 文件');
     } else {

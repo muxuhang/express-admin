@@ -19,7 +19,7 @@
   "data": {
     "models": [
       {
-        "name": "qwen2.5:7b",
+        "name": "llama3.2:3b",
         "size": 4294967296,
         "modified_at": "2024-01-01T12:00:00Z",
         "digest": "sha256:abc123...",
@@ -27,7 +27,7 @@
       }
     ],
     "currentModel": {
-      "name": "qwen2.5:7b",
+      "name": "llama3.2:3b",
       "description": "当前使用的本地模型",
       "type": "local"
     },
@@ -199,13 +199,13 @@ getAvailableModels = async (req, res) => {
 
     console.log('获取可用模型列表...');
 
-    const models = await localAIChatService.getAvailableModels();
+    const models = await aiServiceManager.getAvailableModels();
 
     res.json({
       code: 0,
       data: {
         models: models,
-        currentModel: localAIChatService.getCurrentModel(),
+        currentModel: aiServiceManager.getCurrentModel(),
         timestamp: new Date().toISOString()
       },
       message: '获取模型列表成功'

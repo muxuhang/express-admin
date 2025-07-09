@@ -22,7 +22,6 @@
  * - 提供故障排除建议
  * 
  * 推荐的模型：
- * - qwen2.5:7b: 通义千问2.5 7B模型，中文效果好
  * - llama3.2:3b: Meta Llama 3.2 3B模型，资源占用小
  * - qwen2.5:14b: 通义千问2.5 14B模型，效果更好
  * - llama3.2:8b: Meta Llama 3.2 8B模型，平衡性能
@@ -85,28 +84,18 @@ const guide = installGuides[platform] || installGuides.linux;
 console.log(`📋 ${guide.title}:`);
 guide.steps.forEach(step => console.log(`   ${step}`));
 
-console.log('\n📥 推荐的模型:');
-const recommendedModels = [
-  'qwen2.5:7b - 通义千问2.5 7B模型，中文效果好，资源占用适中',
-  'llama3.2:3b - Meta Llama 3.2 3B模型，英文效果好，资源占用小',
-  'qwen2.5:14b - 通义千问2.5 14B模型，效果更好但需要更多资源',
-  'llama3.2:8b - Meta Llama 3.2 8B模型，平衡性能和资源占用'
-];
-
-recommendedModels.forEach(model => console.log(`   • ${model}`));
-
 console.log('\n🔧 配置步骤:');
 console.log('1. 安装 Ollama 后，运行以下命令下载模型:');
-console.log('   ollama pull qwen2.5:7b');
+console.log('   ollama pull llama3.2:3b');
 console.log('\n2. 验证模型是否可用:');
 console.log('   ollama list');
 console.log('\n3. 测试模型:');
-console.log('   ollama run qwen2.5:7b "你好"');
+console.log('   ollama run llama3.2:3b "你好"');
 
 console.log('\n⚙️  环境变量配置:');
 console.log('在 .env 文件中添加以下配置:');
 console.log('OLLAMA_HOST=http://localhost:11434');
-console.log('OLLAMA_MODEL=qwen2.5:7b');
+console.log('OLLAMA_MODEL=llama3.2:3b');
 
 // 检查 .env 文件是否存在
 const envPath = path.join(process.cwd(), '.env');
@@ -116,7 +105,7 @@ if (fs.existsSync(envPath)) {
   
   // 检查是否已有 Ollama 配置
   if (!envContent.includes('OLLAMA_HOST')) {
-    envContent += '\n# Ollama 本地 AI 模型配置\nOLLAMA_HOST=http://localhost:11434\nOLLAMA_MODEL=qwen2.5:7b\n';
+    envContent += '\n# Ollama 本地 AI 模型配置\nOLLAMA_HOST=http://localhost:11434\nOLLAMA_MODEL=llama3.2:3b\n';
     fs.writeFileSync(envPath, envContent);
     console.log('✅ 已添加 Ollama 配置到 .env 文件');
   } else {
@@ -128,9 +117,10 @@ if (fs.existsSync(envPath)) {
 
 console.log('\n🎯 使用说明:');
 console.log('1. 启动应用后，在聊天界面可以选择使用本地 AI 或在线 AI');
-console.log('2. 发送消息时添加 useLocalAI: true 参数使用本地模型');
+console.log('2. 发送消息时可以在请求中指定 model 参数使用特定模型');
 console.log('3. 可以通过 /api/chat/models 接口查看可用模型');
-console.log('4. 可以通过 /api/chat/switch-model 接口切换模型');
+console.log('4. 可以通过 /api/chat/service/model 接口设置默认模型');
+console.log('5. 可以通过 /api/chat/service/switch 接口切换AI服务');
 
 console.log('\n🔍 故障排除:');
 console.log('• 如果连接失败，请确保 Ollama 服务正在运行');

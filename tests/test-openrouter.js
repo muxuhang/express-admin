@@ -71,20 +71,8 @@ async function testOpenRouter() {
     }
     console.log('✅ 历史记录测试完成\n')
 
-    // 6. 测试服务切换
-    console.log('6️⃣ 测试服务切换...')
-    const originalService = aiServiceManager.getCurrentService()
-    console.log(`当前服务: ${originalService}`)
-    
-    aiServiceManager.setService('local')
-    console.log(`切换到本地服务: ${aiServiceManager.getCurrentService()}`)
-    
-    aiServiceManager.setService('openrouter')
-    console.log(`切换回OpenRouter: ${aiServiceManager.getCurrentService()}`)
-    console.log('✅ 服务切换测试完成\n')
-
-    // 7. 测试模型设置
-    console.log('7️⃣ 测试模型设置...')
+    // 6. 测试模型设置
+    console.log('6️⃣ 测试模型设置...')
     const originalModel = aiServiceManager.getCurrentModel('openrouter')
     console.log(`当前模型: ${originalModel}`)
     
@@ -95,8 +83,8 @@ async function testOpenRouter() {
     console.log(`恢复原模型: ${aiServiceManager.getCurrentModel('openrouter')}`)
     console.log('✅ 模型设置测试完成\n')
 
-    // 8. 清理测试数据
-    console.log('8️⃣ 清理测试数据...')
+    // 7. 清理测试数据
+    console.log('7️⃣ 清理测试数据...')
     aiServiceManager.clearHistory('test-user', 'openrouter')
     console.log('✅ 测试数据清理完成\n')
 

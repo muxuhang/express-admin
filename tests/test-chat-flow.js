@@ -24,7 +24,6 @@ async function testChatFlow() {
     const testModels = [
       'claude-3-haiku',
       'mistral-7b-instruct', 
-      'qwen2.5:7b',
       'llama-2-7b-chat'
     ]
     

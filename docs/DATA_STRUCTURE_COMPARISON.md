@@ -88,7 +88,7 @@
 
 ```json
 {
-  "name": "qwen2.5:7b",
+  "name": "llama3.2:3b",
   "size": 1234567890,
   "modified_at": "2024-01-01T00:00:00Z",
   "digest": "sha256:abc123...",
@@ -121,8 +121,8 @@
 
 ```json
 {
-  "id": "qwen2.5:7b",
-  "name": "qwen2.5:7b",
+  "id": "llama3.2:3b",
+  "name": "llama3.2:3b",
   "provider": "local",
   "description": "当前使用的本地模型",
   "type": "local",
@@ -141,7 +141,7 @@
 
 ```json
 {
-  "name": "qwen2.5:7b",
+  "name": "llama3.2:3b",
   "description": "当前使用的本地模型",
   "type": "local"
 }

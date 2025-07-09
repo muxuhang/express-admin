@@ -31,8 +31,61 @@ class ChatHistoryService {
     return `${userId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
   }
 
+  // 创建空会话
+  async createEmptySession(userId, options = {}) {
+    try {
+      await this.initialize()
+      
+      const {
+        title = '新会话',
+        service = 'openrouter',
+        model = null
+      } = options
+
+      // 如果服务类型是'auto'，转换为'openrouter'
+      const finalService = service === 'auto' ? 'openrouter' : service
+
+      // 生成会话ID
+      const sessionId = this.generateSessionId(userId)
+      
+      // 创建一个系统消息作为会话的初始化
+      const systemMessage = new ChatMessage({
+        userId,
+        sessionId,
+        content: title,
+        role: 'system',
+        service: finalService,
+        model,
+        context: '',
+        messageIndex: 0,
+        status: 'completed',
+        metadata: {
+          sessionTitle: title,
+          isSessionInit: true
+        }
+      })
+
+      await systemMessage.save()
+      console.log(`✅ 空会话已创建: ${userId} - ${sessionId} - 标题: ${title}`)
+      
+      // 返回与会话列表一致的数据结构
+      return {
+        sessionId,
+        title: title,
+        messageCount: 1,
+        createdAt: systemMessage.createdAt,
+        updatedAt: systemMessage.updatedAt,
+        service: finalService,
+        model: model
+      }
+    } catch (error) {
+      console.error('❌ 创建空会话失败:', error)
+      throw error
+    }
+  }
+
   // 保存用户消息
-  async saveUserMessage(userId, sessionId, content, context = '', service = 'local', model = null, messageIndex = null) {
+  async saveUserMessage(userId, sessionId, content, service = 'openrouter', model = null, messageIndex = null) {
     try {
       await this.initialize()
       
@@ -49,13 +102,36 @@ class ChatHistoryService {
         role: 'user',
         service,
         model,
-        context,
+        context: '',
         messageIndex,
         status: 'completed'
       })
 
       await userMessage.save()
       console.log(`✅ 用户消息已保存: ${userId} - ${sessionId} - messageIndex: ${messageIndex}`)
+      
+      // 如果是会话的第一条用户消息，更新系统消息的标题
+      if (messageIndex === 0) {
+        // 检查是否已经有其他用户消息（除了系统消息）
+        const existingUserMessages = await ChatMessage.countDocuments({
+          sessionId,
+          role: 'user'
+        })
+        
+        // 只有当这是第一条用户消息时才更新标题
+        if (existingUserMessages === 1) {
+          const title = content.length > 50 ? content.substring(0, 50) + '...' : content
+          await ChatMessage.findOneAndUpdate(
+            { sessionId, role: 'system', 'metadata.isSessionInit': true },
+            { 
+              content: title,
+              'metadata.sessionTitle': title
+            }
+          )
+          console.log(`✅ 会话标题已更新: ${title}`)
+        }
+      }
+      
       return userMessage
     } catch (error) {
       console.error('❌ 保存用户消息失败:', error)
@@ -64,7 +140,7 @@ class ChatHistoryService {
   }
 
   // 保存AI回复消息
-  async saveAssistantMessage(userId, sessionId, content, service = 'local', model = null, options = {}) {
+  async saveAssistantMessage(userId, sessionId, content, service = 'openrouter', model = null, options = {}) {
     try {
       await this.initialize()
       
@@ -180,7 +256,8 @@ class ChatHistoryService {
       
       const messages = await ChatMessage.find({
         userId,
-        sessionId
+        sessionId,
+        role: { $ne: 'system' } // 排除系统消息，只返回用户和助手的对话
       }).sort({ createdAt: 1 }).lean()
 
       return messages

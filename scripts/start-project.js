@@ -82,7 +82,7 @@ function checkOllamaModel() {
   try {
     console.log('🤖 检查 Ollama 模型...');
     const output = execSync('docker exec ollama ollama list', { encoding: 'utf8' });
-    if (output.includes('qwen2.5:7b')) {
+    if (output.includes('llama3.2:3b')) {
       console.log('✅ 模型已安装');
       return true;
     } else {

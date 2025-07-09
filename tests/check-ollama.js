@@ -30,7 +30,7 @@ async function checkOllamaStatus() {
     }
 
     // 检查目标模型
-    const targetModel = 'qwen2.5:7b';
+    const targetModel = 'llama3.2:3b';
     const hasTargetModel = data.models?.some(m => m.name === targetModel);
     
     if (hasTargetModel) {
@@ -80,11 +80,11 @@ function showInstallationGuide() {
   console.log('   ollama serve');
   
   console.log('\n3. 下载模型:');
-  console.log('   ollama pull qwen2.5:7b');
+  console.log('   ollama pull llama3.2:3b');
   
   console.log('\n4. 验证安装:');
   console.log('   ollama list');
-  console.log('   ollama run qwen2.5:7b "你好"');
+  console.log('   ollama run llama3.2:3b "你好"');
 }
 
 // 运行检查
