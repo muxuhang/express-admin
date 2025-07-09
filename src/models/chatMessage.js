@@ -30,7 +30,7 @@ const chatMessageSchema = new mongoose.Schema({
     type: String,
     required: [true, 'AI服务不能为空'],
     enum: {
-      values: ['local', 'openrouter'],
+      values: ['openrouter', 'auto'],
       message: '无效的AI服务'
     }
   },
@@ -176,7 +176,16 @@ chatMessageSchema.statics.getUserSessions = function(userId, options = {}) {
         _id: '$sessionId',
         lastMessage: { $last: '$$ROOT' },
         messageCount: { $sum: 1 },
-        firstMessage: { $first: '$$ROOT' }
+        firstMessage: { $first: '$$ROOT' },
+        systemMessage: {
+          $first: {
+            $cond: [
+              { $eq: ['$role', 'system'] },
+              '$$ROOT',
+              null
+            ]
+          }
+        }
       }
     },
     { $sort: { 'lastMessage.createdAt': -1 } },
@@ -185,9 +194,18 @@ chatMessageSchema.statics.getUserSessions = function(userId, options = {}) {
     {
       $project: {
         sessionId: '$_id',
-        lastMessage: 1,
+        title: {
+          $cond: [
+            { $ne: ['$systemMessage', null] },
+            '$systemMessage.content',
+            { $substr: ['$firstMessage.content', 0, 50] }
+          ]
+        },
         messageCount: 1,
-        firstMessage: 1,
+        createdAt: '$firstMessage.createdAt',
+        updatedAt: '$lastMessage.updatedAt',
+        service: '$firstMessage.service',
+        model: '$firstMessage.model',
         _id: 0
       }
     }

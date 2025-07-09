@@ -7,19 +7,15 @@ const router = express.Router()
 // 验证规则
 const messageValidation = [
   body('message').trim().isLength({ min: 1, max: 1000 }).withMessage('消息长度必须在1-1000字符之间'),
-  body('context').optional().isString().withMessage('上下文必须是字符串'),
   body('userId').optional().isString().withMessage('用户ID必须是字符串'),
-  body('service').optional().isIn(['local', 'openrouter', 'auto']).withMessage('服务类型必须是local、openrouter或auto'),
+  body('service').optional().isIn(['openrouter', 'auto']).withMessage('服务类型必须是openrouter或auto'),
   body('model').optional().isString().withMessage('模型名称必须是字符串'),
-]
-
-const serviceValidation = [
-  body('service').isIn(['local', 'openrouter', 'auto']).withMessage('服务类型必须是local、openrouter或auto'),
+  body('sessionId').optional().isString().withMessage('会话ID必须是字符串'),
 ]
 
 const modelValidation = [
   body('model').isString().withMessage('模型名称必须是字符串'),
-  body('service').optional().isIn(['local', 'openrouter', 'auto']).withMessage('服务类型必须是local、openrouter或auto'),
+  body('service').optional().isIn(['openrouter', 'auto']).withMessage('服务类型必须是openrouter或auto'),
 ]
 
 // 用户管理相关接口
@@ -32,6 +28,7 @@ router.delete('/api/chat/history', chatController.clearHistory)
 
 // 会话管理相关接口
 router.get('/api/chat/sessions', chatController.getUserSessions)
+router.post('/api/chat/session/create', chatController.createEmptySession)
 router.get('/api/chat/session/:sessionId', chatController.getSessionDetails)
 router.delete('/api/chat/session/:sessionId', chatController.deleteSession)
 
@@ -44,7 +41,6 @@ router.get('/api/chat/models', chatController.getAvailableModels)
 
 // 服务管理相关接口
 router.get('/api/chat/service/status', chatController.getServiceStatus)
-router.post('/api/chat/service/switch', serviceValidation, chatController.switchService)
 router.post('/api/chat/service/model', modelValidation, chatController.setModel)
 
 export default router

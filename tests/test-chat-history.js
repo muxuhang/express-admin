@@ -86,16 +86,16 @@ async function testChatHistory() {
       sessionId2,
       'Vue.js有什么特点？',
       '前端框架学习',
-      'local',
-      'llama2:latest'
+      'openrouter',
+      'mistralai/mistral-7b-instruct'
     )
 
     await chatHistoryService.saveAssistantMessage(
       userId,
       sessionId2,
       'Vue.js是一个渐进式的JavaScript框架，具有易学易用、轻量级、双向数据绑定等特点。',
-      'local',
-      'llama2:latest',
+      'openrouter',
+      'mistralai/mistral-7b-instruct',
       {
         chunkCount: 3,
         responseTime: 1800,

@@ -45,6 +45,7 @@ class OpenRouterService {
         apiKey: apiKey,
         baseURL: 'https://openrouter.ai/api/v1',
         defaultHeaders: {
+          'Authorization': `Bearer ${apiKey}`,
           'HTTP-Referer': process.env.APP_URL || 'http://localhost:3000',
           'X-Title': 'Express Admin Chat'
         }
@@ -110,7 +111,7 @@ class OpenRouterService {
   }
 
   // 发送消息给AI（流式输出）
-  async *sendMessage(userId, message, context = '', modelName = null) {
+  async *sendMessage(userId, message, modelName = null, sessionId = null) {
     try {
       // 确保客户端已初始化
       if (!this.isInitialized) {
@@ -124,17 +125,40 @@ class OpenRouterService {
       // 生成取消令牌
       const cancelToken = `${userId}_${Date.now()}`
       this.cancelTokens.set(userId, cancelToken)
-      // 生成/获取 sessionId（同一天同一用户为同一会话）
-      const today = new Date().toISOString().slice(0, 10)
-      const sessionId = `${userId}_${today}`
+      
+      // 获取或创建 sessionId
+      let finalSessionId = sessionId
+      
+      if (!finalSessionId) {
+        // 如果没有指定sessionId，尝试获取用户最近的会话
+        try {
+          const sessions = await chatHistoryService.getUserSessions(userId, { page: 1, limit: 1 })
+          if (sessions && sessions.length > 0) {
+            finalSessionId = sessions[0].sessionId
+            console.log(`使用最近活跃的会话: ${finalSessionId}`)
+          }
+        } catch (error) {
+          console.log('未找到现有会话')
+        }
+      } else {
+        console.log(`使用指定的会话: ${finalSessionId}`)
+      }
+      
+      // 如果没有会话，创建新会话
+      if (!finalSessionId) {
+        finalSessionId = chatHistoryService.generateSessionId(userId)
+        console.log(`创建新会话: ${finalSessionId}`)
+      }
+      
       // 获取当前会话最大 messageIndex
       let messageIndex = 0
       try {
-        const lastMsg = await chatHistoryService.getSessionDetails(userId, sessionId)
+        const lastMsg = await chatHistoryService.getSessionDetails(userId, finalSessionId)
         messageIndex = lastMsg.length
       } catch {}
+      
       // 存储用户消息
-      await chatHistoryService.saveUserMessage(userId, sessionId, message, context, 'openrouter', modelName, messageIndex)
+      await chatHistoryService.saveUserMessage(userId, finalSessionId, message, 'openrouter', modelName, messageIndex)
 
       // 处理模型ID，确保使用完整的模型ID
       let model = modelName || this.defaultModel
@@ -165,9 +189,11 @@ class OpenRouterService {
       const systemPrompt = `
       你是一个智能助手，专门帮助用户解决前端开发相关的问题，包括但不限于 HTML、CSS、JavaScript、React、Vue、TypeScript、前端性能优化、组件设计、调试技巧、跨域处理等。
 
-      系统上下文：${context}
-
       请用中文回答，保持简洁、友好、专业的态度。回答中尽可能提供清晰的代码示例和解决思路，避免使用难以理解的术语。
+
+      如果用户输入无意义的内容，介绍你的功能。
+
+      回答结束后要增加一个总结性的句子。
       `
 
       // 构建消息历史
@@ -194,7 +220,21 @@ class OpenRouterService {
             max_tokens: 1000,
             top_p: 0.9,
             frequency_penalty: 0.1,
-            presence_penalty: 0.1
+            presence_penalty: 0.1,
+            // 增加更多默认参数
+            n: 1,
+            stop: null,
+            logprobs: null,
+            echo: false,
+            logit_bias: null,
+            user: userId,
+            // 确保请求头包含所有必需信息
+            headers: {
+              'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+              'HTTP-Referer': process.env.APP_URL || 'http://localhost:3000',
+              'X-Title': 'Express Admin Chat',
+              'Content-Type': 'application/json'
+            }
           })
           break // 成功获取流，跳出重试循环
         } catch (error) {
@@ -264,7 +304,7 @@ class OpenRouterService {
         
         this.conversationHistory.set(userId, history)
         // 存储AI回复
-        await chatHistoryService.saveAssistantMessage(userId, sessionId, fullResponse, 'openrouter', modelName, {
+        await chatHistoryService.saveAssistantMessage(userId, finalSessionId, fullResponse, 'openrouter', modelName, {
           chunkCount,
           status: 'completed',
           messageIndex: messageIndex + 1

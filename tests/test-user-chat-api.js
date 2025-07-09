@@ -48,7 +48,7 @@ async function sendChatMessage(message, userId) {
       body: JSON.stringify({
         message: message,
         userId: userId,
-        service: 'auto' // 可选: local, openrouter, auto
+        service: 'auto' // 可选: openrouter, auto
       })
     });
 
@@ -224,8 +224,9 @@ POST /api/chat/user/generate
 💬 聊天核心接口:
 POST /api/chat/send
 - 功能: 发送聊天消息（流式响应）
-- 参数: { message: "消息内容", userId: "用户ID", service?: "local|openrouter|auto", model?: "模型名称" }
+- 参数: { message: "消息内容", userId: "用户ID", service?: "openrouter|auto", model?: "模型名称", sessionId?: "会话ID" }
 - 返回: Server-Sent Events 流式数据
+- 说明: 优先使用指定的会话ID，如果没有指定则使用最近活跃的会话，只有在没有现有会话时才创建新会话。如果是会话的第一条用户消息，会自动使用用户提问内容的前50个字符更新会话标题。已移除context参数，系统会自动处理上下文
 
 📋 历史记录接口:
 GET /api/chat/history?userId=xxx&page=1&limit=10&service=xxx&sessionId=xxx
@@ -237,7 +238,12 @@ GET /api/chat/history?userId=xxx&page=1&limit=10&service=xxx&sessionId=xxx
 GET /api/chat/sessions?userId=xxx&page=1&limit=10
 - 功能: 获取用户会话列表
 - 参数: userId(必需), page, limit
-- 返回: { code: 0, data: { sessions: [] } }
+- 返回: { code: 0, data: { list: [] } }
+
+POST /api/chat/session/create
+- 功能: 创建空会话
+- 参数: { userId: "用户ID", title?: "会话标题", service?: "服务类型", model?: "模型名称" }
+- 返回: { code: 0, data: { sessionId: "会话ID", title: "标题", messageCount: 1, createdAt: "创建时间", updatedAt: "更新时间", service: "服务", model: "模型" } }
 
 GET /api/chat/session/:sessionId?userId=xxx
 - 功能: 获取指定会话详情

@@ -75,7 +75,7 @@ async function diagnoseOllama() {
 
   // 4. 检查模型状态
   console.log('\n4. 检查模型状态...');
-  const targetModel = 'qwen2.5:7b';
+  const targetModel = 'llama3.2:3b';
   try {
     const ollama = new Ollama({ host: ollamaHost });
     const models = await ollama.list();
@@ -93,7 +93,7 @@ async function diagnoseOllama() {
       }
     } else {
       console.log(`❌ 模型 ${targetModel} 未安装`);
-      console.log('建议运行: ollama pull qwen2.5:7b');
+      console.log('建议运行: ollama pull llama3.2:3b');
     }
   } catch (error) {
     console.log('❌ 检查模型状态失败:', error.message);
@@ -149,7 +149,7 @@ async function diagnoseOllama() {
   console.log('\n' + '=' .repeat(50));
   console.log('🔧 常见问题解决方案:');
   console.log('1. 服务未启动: ollama serve');
-  console.log('2. 模型未下载: ollama pull qwen2.5:7b');
+  console.log('2. 模型未下载: ollama pull llama3.2:3b');
   console.log('3. 端口被占用: 检查 11434 端口');
   console.log('4. 内存不足: 关闭其他程序释放内存');
   console.log('5. 网络问题: 检查防火墙和代理设置');

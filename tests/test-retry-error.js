@@ -119,34 +119,20 @@ async function testRetryAndErrorHandling() {
   console.log('\n3. 测试错误处理...');
   
   // 这里我们可以通过修改环境变量或使用错误的URL来模拟错误
-  // 在实际环境中，这些错误通常由Ollama服务不可用引起
+  // 在实际环境中，这些错误通常由OpenRouter服务不可用引起
   
-  console.log('注意：以下错误是预期的，用于测试错误处理逻辑');
+  console.log('要测试错误处理，请尝试以下操作:');
+  console.log('1. 删除或修改 OPENROUTER_API_KEY 环境变量');
+  console.log('2. 发送聊天请求');
+  console.log('3. 观察错误响应');
+  console.log('4. 恢复正确的 API 密钥');
+  console.log('5. 再次发送请求验证恢复');
   
-  // 测试各种错误情况
-  const errorTests = [
-    {
-      name: '连接超时',
-      message: 'AI服务连接超时，请稍后重试',
-      expectedCode: 504
-    },
-    {
-      name: '服务不可用',
-      message: 'AI服务不可用，请检查Ollama服务是否启动',
-      expectedCode: 503
-    },
-    {
-      name: '网络连接问题',
-      message: '无法连接到AI服务，请检查网络连接',
-      expectedCode: 503
-    }
-  ];
-
-  for (const test of errorTests) {
-    console.log(`\n测试 ${test.name}:`);
-    console.log(`预期错误: ${test.message}`);
-    console.log(`预期状态码: ${test.expectedCode}`);
-  }
+  console.log('\n预期行为:');
+  console.log('- 首次失败时会自动重试');
+  console.log('- 重试失败后返回用户友好的错误信息');
+  console.log('- 错误信息包含具体的解决建议');
+  console.log('- 前端能正确显示错误状态');
 
   // 4. 测试重试逻辑
   console.log('\n4. 重试逻辑说明:');
@@ -158,7 +144,7 @@ async function testRetryAndErrorHandling() {
   // 5. 错误分类说明
   console.log('\n5. 错误分类:');
   console.log('- 504: 连接超时 (Headers Timeout, fetch failed)');
-  console.log('- 503: 服务不可用 (ECONNREFUSED, 服务未启动)');
+  console.log('- 503: 服务不可用 (OpenRouter API 密钥未配置)');
   console.log('- 503: 网络问题 (ENOTFOUND, 无法连接)');
   console.log('- 499: 用户取消');
   console.log('- 500: 其他未知错误');
@@ -169,10 +155,10 @@ async function testErrorScenarios() {
   console.log('\n\n🧪 模拟错误场景测试...\n');
   
   console.log('要测试错误处理，请尝试以下操作:');
-  console.log('1. 停止 Ollama 服务: pkill ollama');
+  console.log('1. 删除或修改 OPENROUTER_API_KEY 环境变量');
   console.log('2. 发送聊天请求');
   console.log('3. 观察错误响应');
-  console.log('4. 重启 Ollama 服务: ollama serve');
+  console.log('4. 恢复正确的 API 密钥');
   console.log('5. 再次发送请求验证恢复');
   
   console.log('\n预期行为:');

@@ -85,7 +85,7 @@ function formatBytes(bytes) {
 async function testModelSwitching() {
   console.log('\n\n🔄 模型切换功能测试（预留）...\n');
   
-  console.log('当前系统使用固定模型: qwen2.5:7b');
+  console.log('当前系统使用固定模型: llama3.2:3b');
   console.log('如需支持模型切换，可以考虑以下功能:');
   console.log('1. 添加切换模型的接口');
   console.log('2. 在聊天时指定使用的模型');

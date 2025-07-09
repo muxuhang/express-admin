@@ -1,29 +1,15 @@
-import localAIChatService from './localAIChat.js'
 import openRouterService from './openRouterService.js'
 
 class AIServiceManager {
   constructor() {
     this.services = {
-      local: localAIChatService,
       openrouter: openRouterService
     }
     
-    // 默认使用本地AI服务
-    this.currentService = 'local'
+    // 默认使用OpenRouter服务
+    this.currentService = 'openrouter'
     this.conversationHistory = new Map()
     this.cancelTokens = new Map()
-  }
-
-  // 设置当前使用的AI服务
-  setService(serviceName) {
-    if (this.services[serviceName]) {
-      this.currentService = serviceName
-      console.log(`AI服务已切换到: ${serviceName}`)
-      return true
-    } else {
-      console.error(`不支持的AI服务: ${serviceName}`)
-      return false
-    }
   }
 
   // 获取当前AI服务
@@ -43,7 +29,6 @@ class AIServiceManager {
   // 获取服务显示名称
   getServiceDisplayName(serviceName) {
     const names = {
-      local: '本地AI (Ollama)',
       openrouter: 'OpenRouter (免费模型)'
     }
     return names[serviceName] || serviceName
@@ -52,7 +37,6 @@ class AIServiceManager {
   // 获取服务描述
   getServiceDescription(serviceName) {
     const descriptions = {
-      local: '使用本地Ollama服务，需要安装和配置Ollama',
       openrouter: '使用OpenRouter提供的免费AI模型，需要API密钥'
     }
     return descriptions[serviceName] || ''
@@ -64,10 +48,7 @@ class AIServiceManager {
     const serviceInstance = this.services[service]
     
     try {
-      if (service === 'local') {
-        await serviceInstance.initialize()
-        await serviceInstance.testConnection()
-      } else if (service === 'openrouter') {
+      if (service === 'openrouter') {
         await serviceInstance.initialize()
         await serviceInstance.testConnection()
       }
@@ -97,29 +78,14 @@ class AIServiceManager {
       return 'openrouter'
     }
 
-    // 检查是否是本地模型（包含:的格式，如llama2:latest）
-    if (modelName.includes(':')) {
-      return 'local'
-    }
-
-    // 如果只是模型名称，尝试在所有服务中查找
+    // 如果只是模型名称，尝试在OpenRouter服务中查找
     try {
-      // 先检查OpenRouter模型
       const openRouterModels = await this.services.openrouter.getAvailableModels()
       const isOpenRouterModel = openRouterModels.some(m => 
         m.id === modelName || m.name === modelName || m.id.endsWith(modelName)
       )
       if (isOpenRouterModel) {
         return 'openrouter'
-      }
-
-      // 再检查本地模型
-      const localModels = await this.services.local.getAvailableModels()
-      const isLocalModel = localModels.some(m => 
-        m.name === modelName || m.name.includes(modelName)
-      )
-      if (isLocalModel) {
-        return 'local'
       }
     } catch (error) {
       console.warn('检查模型所属服务时出错:', error.message)
@@ -130,9 +96,10 @@ class AIServiceManager {
   }
 
   // 发送消息（统一接口）
-  async *sendMessage(userId, message, context = '', options = {}) {
+  async *sendMessage(userId, message, options = {}) {
     let serviceName = options.service
     const modelName = options.model || null
+    const sessionId = options.sessionId || null
 
     // 如果没有指定服务，或者指定为'auto'，根据模型智能判断
     if ((!serviceName || serviceName === 'auto') && modelName) {
@@ -150,9 +117,9 @@ class AIServiceManager {
       
       // 根据服务类型调用不同的方法
       if (serviceName === 'openrouter') {
-        yield* serviceInstance.sendMessage(userId, message, context, modelName)
+        yield* serviceInstance.sendMessage(userId, message, modelName, sessionId)
       } else {
-        yield* serviceInstance.sendMessage(userId, message, context)
+        yield* serviceInstance.sendMessage(userId, message, sessionId)
       }
     } catch (error) {
       console.error(`${serviceName} 服务错误:`, error)
@@ -167,8 +134,6 @@ class AIServiceManager {
     
     try {
       if (service === 'openrouter') {
-        return await serviceInstance.getAvailableModels()
-      } else if (service === 'local') {
         return await serviceInstance.getAvailableModels()
       }
     } catch (error) {
@@ -198,9 +163,6 @@ class AIServiceManager {
     try {
       if (service === 'openrouter') {
         serviceInstance.setDefaultModel(modelName)
-      } else if (service === 'local') {
-        // 本地服务通常使用固定模型
-        console.log('本地服务使用固定模型，无法更改')
       }
     } catch (error) {
       console.error(`设置 ${service} 模型失败:`, error)
@@ -264,16 +226,7 @@ class AIServiceManager {
     
     for (const [serviceName, serviceInstance] of Object.entries(this.services)) {
       try {
-        if (serviceName === 'local') {
-          await serviceInstance.initialize()
-          const models = await serviceInstance.getAvailableModels()
-          status[serviceName] = {
-            available: true,
-            currentModel: serviceInstance.getCurrentModel(),
-            availableModels: models.length,
-            displayName: this.getServiceDisplayName(serviceName)
-          }
-        } else if (serviceName === 'openrouter') {
+        if (serviceName === 'openrouter') {
           await serviceInstance.initialize()
           const models = await serviceInstance.getAvailableModels()
           status[serviceName] = {
@@ -298,23 +251,6 @@ class AIServiceManager {
   // 获取所有服务的全部模型
   async getAllModels() {
     const allModels = []
-    // 本地模型
-    try {
-      const localModels = await this.services.local.getAvailableModels()
-      localModels.forEach(m => {
-        allModels.push({
-          id: m.name,  // 本地模型使用name作为完整ID
-          name: m.name,
-          displayName: m.name,  // 添加displayName字段保持一致性
-          provider: 'local',
-          type: 'local',
-          description: '本地Ollama模型',
-          ...m
-        })
-      })
-    } catch (e) {
-      console.error('获取本地模型失败:', e.message)
-    }
     // OpenRouter模型
     try {
       const openModels = await this.services.openrouter.getAvailableModels()
@@ -362,6 +298,18 @@ class AIServiceManager {
       return await chatHistoryService.clearUserHistory(userId, sessionId)
     } catch (error) {
       console.error('删除会话失败:', error)
+      throw error
+    }
+  }
+
+  // 创建空会话
+  async createEmptySession(userId, options = {}) {
+    try {
+      // 导入chatHistoryService
+      const { default: chatHistoryService } = await import('./chatHistoryService.js')
+      return await chatHistoryService.createEmptySession(userId, options)
+    } catch (error) {
+      console.error('创建空会话失败:', error)
       throw error
     }
   }
