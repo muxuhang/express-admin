@@ -1,6 +1,6 @@
 import express from 'express'
 import { body } from 'express-validator'
-import chatController from '../controllers/chatController.js'
+import chatController from '../../controllers/chatController.js'
 
 const router = express.Router()
 

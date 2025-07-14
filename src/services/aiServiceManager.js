@@ -127,6 +127,53 @@ class AIServiceManager {
     }
   }
 
+  // 生成图片（统一接口）
+  async *generateImage(userId, prompt, options = {}) {
+    let serviceName = options.service || this.currentService
+    const modelName = options.model || null
+
+    // 如果没有指定服务，或者指定为'auto'，根据模型智能判断
+    if ((!serviceName || serviceName === 'auto') && modelName) {
+      serviceName = await this.determineServiceByModel(modelName)
+      console.log(`根据模型 "${modelName}" 自动选择服务: ${serviceName}`)
+    } else if (!serviceName || serviceName === 'auto') {
+      serviceName = this.currentService
+      console.log(`使用默认服务: ${serviceName}`)
+    }
+
+    const serviceInstance = this.services[serviceName]
+
+    try {
+      console.log(`使用 ${this.getServiceDisplayName(serviceName)} 生成图片`)
+      
+      // 根据服务类型调用不同的方法
+      if (serviceName === 'openrouter') {
+        yield* serviceInstance.generateImage(userId, prompt, options)
+      } else {
+        throw new Error(`服务 ${serviceName} 不支持图片生成`)
+      }
+    } catch (error) {
+      console.error(`${serviceName} 图片生成错误:`, error)
+      throw error
+    }
+  }
+
+  // 获取图片生成模型
+  async getImageModels(serviceName = null) {
+    const service = serviceName || this.currentService
+    const serviceInstance = this.services[service]
+    
+    try {
+      if (service === 'openrouter') {
+        return await serviceInstance.getImageModels()
+      }
+      return []
+    } catch (error) {
+      console.error(`获取 ${service} 图片模型列表失败:`, error)
+      return []
+    }
+  }
+
   // 获取可用模型
   async getAvailableModels(serviceName = null) {
     const service = serviceName || this.currentService

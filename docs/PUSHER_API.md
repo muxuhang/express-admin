@@ -592,7 +592,7 @@ const pauseTask = await fetch('/api/pusher/tasks/task-id/status', {
 
 ```bash
 # 立即推送
-curl -X POST http://localhost:3000/api/pusher/push \
+curl -X POST http://localhost:8888/api/pusher/push \
   -H "Authorization: Bearer your-token" \
   -H "Content-Type: application/json" \
   -d '{
@@ -605,7 +605,7 @@ curl -X POST http://localhost:3000/api/pusher/push \
   }'
 
 # 定时推送
-curl -X POST http://localhost:3000/api/pusher/push \
+curl -X POST http://localhost:8888/api/pusher/push \
   -H "Authorization: Bearer your-token" \
   -H "Content-Type: application/json" \
   -d '{
@@ -618,7 +618,7 @@ curl -X POST http://localhost:3000/api/pusher/push \
   }'
 
 # 循环推送
-curl -X POST http://localhost:3000/api/pusher/push \
+curl -X POST http://localhost:8888/api/pusher/push \
   -H "Authorization: Bearer your-token" \
   -H "Content-Type: application/json" \
   -d '{

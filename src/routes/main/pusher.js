@@ -1,9 +1,9 @@
 import express from 'express'
-import pusherService from '../services/pusher.js'
-import handleError from '../utils/handleError.js'
-import authLogin from '../middleware/authLogin.js'
-import User from '../models/user.js'
-import Role from '../models/role.js'
+import pusherService from '../../services/pusher.js'
+import handleError from '../../utils/handleError.js'
+import authLogin from '../../middleware/authLogin.js'
+import User from '../../models/user.js'
+import Role from '../../models/role.js'
 
 const router = express.Router()
 
@@ -510,6 +510,31 @@ router.get('/api/pusher/targets', authLogin, async (req, res) => {
         })),
       },
       message: '获取推送目标选项成功',
+    })
+  } catch (error) {
+    handleError(error, req, res)
+  }
+})
+
+// 重置定时任务状态（允许重新执行）
+router.post('/api/pusher/tasks/:taskId/reset', authLogin, async (req, res) => {
+  try {
+    const { taskId } = req.params
+    const { _id: userId, role } = req.user
+
+    const result = await pusherService.resetScheduledTask(taskId, userId, role)
+
+    if (!result) {
+      return res.status(404).json({
+        code: 404,
+        message: '推送任务不存在或无权限重置',
+      })
+    }
+
+    res.json({
+      code: 0,
+      data: result,
+      message: '定时任务状态重置成功，可以重新执行',
     })
   } catch (error) {
     handleError(error, req, res)

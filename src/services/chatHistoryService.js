@@ -1,5 +1,6 @@
 import mongoose from 'mongoose'
 import ChatMessage from '../models/chatMessage.js'
+import { getCurrentDateTime, formatDateTime } from '../utils/dateFormatter.js'
 
 class ChatHistoryService {
   constructor() {
@@ -391,7 +392,7 @@ class ChatHistoryService {
       if (format === 'json') {
         return {
           userId,
-          exportTime: new Date().toISOString(),
+          exportTime: formatDateTime(new Date()),
           totalMessages: messages.length,
           messages
         }

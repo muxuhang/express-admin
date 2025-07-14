@@ -1,8 +1,8 @@
 import express from 'express'
 import fs from 'fs'
 import path from 'path'
-import handleError from '../utils/handleError.js'
-import authLogin from '../middleware/authLogin.js'
+import handleError from '../../utils/handleError.js'
+import authLogin from '../../middleware/authLogin.js'
 
 const router = express.Router()
 

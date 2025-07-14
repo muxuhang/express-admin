@@ -1,7 +1,7 @@
 import express from 'express'
-import LoginLog from '../models/loginLog.js'
-import handleError from '../utils/handleError.js'
-import authLogin from '../middleware/authLogin.js'
+import LoginLog from '../../models/loginLog.js'
+import handleError from '../../utils/handleError.js'
+import authLogin from '../../middleware/authLogin.js'
 
 const router = express.Router()
 

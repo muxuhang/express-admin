@@ -1,8 +1,8 @@
 import express from 'express'
-import User from '../models/user.js'
-import Role from '../models/role.js'
-import handleError from '../utils/handleError.js'
-import authLogin from '../middleware/authLogin.js'
+import User from '../../models/user.js'
+import Role from '../../models/role.js'
+import handleError from '../../utils/handleError.js'
+import authLogin from '../../middleware/authLogin.js'
 
 const router = express.Router()
 

@@ -1,0 +1,30 @@
+{
+  "name": "Express Admin API",
+  "version": "1.0.0",
+  "description": "Express Admin 系统API文档",
+  "title": "Express Admin API",
+  "url": "http://localhost:3000",
+  "sampleUrl": "http://localhost:3000",
+  "header": {
+    "title": "API 概述",
+    "content": "Express Admin 系统提供完整的用户管理、角色权限、内容管理等功能API"
+  },
+  "footer": {
+    "title": "技术支持",
+    "content": "如有问题请联系开发团队"
+  },
+  "template": {
+    "withCompare": true,
+    "withGenerator": true
+  },
+  "order": [
+    "Auth",
+    "User",
+    "Role",
+    "Permission",
+    "Article",
+    "Menu",
+    "File",
+    "Chat"
+  ]
+} 

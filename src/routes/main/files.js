@@ -1,7 +1,7 @@
 import express from 'express'
 import fs from 'fs'
 import path from 'path'
-import handleError from '../utils/handleError.js'
+import handleError from '../../utils/handleError.js'
 
 const router = express.Router()
 

@@ -98,6 +98,23 @@ function showFrontendExample() {
   console.log('\n\n🌐 前端使用示例:\n');
   
   console.log(`
+// 时间格式化函数
+function formatDateTime(date) {
+  if (!date) return ''
+  
+  const d = new Date(date)
+  if (isNaN(d.getTime())) return ''
+  
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  const hours = String(d.getHours()).padStart(2, '0')
+  const minutes = String(d.getMinutes()).padStart(2, '0')
+  const seconds = String(d.getSeconds()).padStart(2, '0')
+  
+  return \`\${year}-\${month}-\${day} \${hours}:\${minutes}:\${seconds}\`
+}
+
 // 获取模型列表
 async function getAvailableModels() {
   try {
@@ -136,7 +153,7 @@ function updateModelList(models) {
     modelItem.innerHTML = \`
       <h3>\${model.name}</h3>
       <p>大小: \${formatBytes(model.size)}</p>
-      <p>更新时间: \${new Date(model.modified_at).toLocaleString()}</p>
+      <p>更新时间: \${formatDateTime(model.modified_at)}</p>
     \`;
     modelList.appendChild(modelItem);
   });

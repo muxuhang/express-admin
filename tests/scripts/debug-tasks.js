@@ -2,6 +2,7 @@ import dotenv from 'dotenv'
 import './src/mongodb.js'
 import PushTask from './src/models/pushTask.js'
 import pusherService from './src/services/pusher.js'
+import { formatDateTime } from './src/utils/dateFormatter.js'
 
 // 加载环境变量
 dotenv.config()
@@ -35,11 +36,11 @@ try {
       tasksByStatus[status].forEach((task, index) => {
         console.log(`  ${index + 1}. ${task.title} (${task.pushMode}) - 创建者: ${task.createdByUsername}`)
         if (task.pushMode === 'scheduled' && task.scheduledTime) {
-          console.log(`      定时时间: ${task.scheduledTime.toLocaleString()}`)
+          console.log(`      定时时间: ${formatDateTime(task.scheduledTime)}`)
           console.log(`      是否已过期: ${task.scheduledTime <= new Date() ? '是' : '否'}`)
         }
         if (task.pushMode === 'recurring' && task.recurringConfig) {
-          console.log(`      下次执行时间: ${task.recurringConfig.nextExecutionTime?.toLocaleString() || '未设置'}`)
+          console.log(`      下次执行时间: ${task.recurringConfig.nextExecutionTime ? formatDateTime(task.recurringConfig.nextExecutionTime) : '未设置'}`)
           console.log(`      是否已过期: ${task.recurringConfig.nextExecutionTime && task.recurringConfig.nextExecutionTime <= new Date() ? '是' : '否'}`)
         }
       })
@@ -52,13 +53,13 @@ try {
       sendingTasks.forEach((task, index) => {
         console.log(`  ${index + 1}. ${task.title} (${task.pushMode})`)
         console.log(`      任务ID: ${task._id}`)
-        console.log(`      创建时间: ${task.createdAt.toLocaleString()}`)
-        console.log(`      最后更新: ${task.updatedAt.toLocaleString()}`)
+        console.log(`      创建时间: ${formatDateTime(task.createdAt)}`)
+        console.log(`      最后更新: ${formatDateTime(task.updatedAt)}`)
         
         // 检查执行历史
         if (task.executionHistory && task.executionHistory.length > 0) {
           const lastExecution = task.executionHistory[task.executionHistory.length - 1]
-          console.log(`      最后执行: ${lastExecution.executionTime.toLocaleString()}`)
+          console.log(`      最后执行: ${formatDateTime(lastExecution.executionTime)}`)
           console.log(`      执行状态: ${lastExecution.status}`)
           if (lastExecution.errorMessage) {
             console.log(`      错误信息: ${lastExecution.errorMessage}`)
