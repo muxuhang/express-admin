@@ -1,12 +1,12 @@
 import express from 'express'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
-import User from '../models/user.js'
-import LoginLog from '../models/loginLog.js'
-import handleError from '../utils/handleError.js'
-import { isValidUsername, isValidPassword, isEmpty, isValidEmail, isValidPhone } from '../utils/valid.js'
-import { verifyToken } from '../utils/auth.js'
-import authLogin from '../middleware/authLogin.js'
+import User from '../../models/user.js'
+import LoginLog from '../../models/loginLog.js'
+import handleError from '../../utils/handleError.js'
+import { isValidUsername, isValidPassword, isEmpty, isValidEmail, isValidPhone } from '../../utils/valid.js'
+import { verifyToken } from '../../utils/auth.js'
+import authLogin from '../../middleware/authLogin.js'
 
 const router = express.Router()
 

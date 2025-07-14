@@ -5,7 +5,7 @@
 ### 🚀 核心功能文档
 
 #### AI聊天功能
-- **[README-USER-CHAT.md](./README-USER-CHAT.md)** - 用户聊天功能完整说明
+- **[README_USER_CHAT.md](./README_USER_CHAT.md)** - 用户聊天功能完整说明
   - 无需登录的AI聊天功能
   - 用户ID管理和会话管理
   - 完整的API接口文档
@@ -21,6 +21,12 @@
 - **[SMART_SERVICE_DETECTION.md](./SMART_SERVICE_DETECTION.md)** - 智能服务检测机制
 - **[HISTORY_LOGIC.md](./HISTORY_LOGIC.md)** - 历史记录逻辑说明
 - **[DATA_STRUCTURE_COMPARISON.md](./DATA_STRUCTURE_COMPARISON.md)** - 数据结构对比
+
+### 🧪 测试文档
+- **[TEST_STRUCTURE.md](./TEST_STRUCTURE.md)** - 测试文件结构说明
+  - 单元测试、集成测试、手动测试组织
+  - 测试运行指南和最佳实践
+  - 测试覆盖率配置
 
 ### 🔧 系统管理文档
 
@@ -40,40 +46,71 @@
 - **[RECURRING_PUSH_FIX.md](./RECURRING_PUSH_FIX.md)** - 循环推送修复文档
 
 #### 推送API文档
-- **[pusher-api.md](./pusher-api.md)** - 推送API完整文档
-- **[pusher-api-simple.md](./pusher-api-simple.md)** - 推送API简化文档
-- **[push-optimization-summary.md](./push-optimization-summary.md)** - 推送优化总结
+- **[PUSHER_API.md](./PUSHER_API.md)** - 推送API完整文档
+- **[PUSHER_API_SIMPLE.md](./PUSHER_API_SIMPLE.md)** - 推送API简化文档
+- **[PUSH_OPTIMIZATION_SUMMARY.md](./PUSH_OPTIMIZATION_SUMMARY.md)** - 推送优化总结
 
 ### 👥 用户管理系统
 
 #### 用户和角色管理
-- **[user-api.md](./user-api.md)** - 用户API文档
-- **[role-api.md](./role-api.md)** - 角色API文档
-- **[menu-api.md](./menu-api.md)** - 菜单API文档
+- **[USER_API.md](./USER_API.md)** - 用户API文档
+- **[ROLE_API.md](./ROLE_API.md)** - 角色API文档
+- **[MENU_API.md](./MENU_API.md)** - 菜单API文档
 - **[ROLE_MENUS_API.md](./ROLE_MENUS_API.md)** - 角色菜单API文档
 
 #### 系统增强功能
-- **[login-enhancement.md](./login-enhancement.md)** - 登录功能增强
-- **[camelCase-unification.md](./camelCase-unification.md)** - 驼峰命名统一
-- **[target-type-enhancement.md](./target-type-enhancement.md)** - 目标类型增强
+- **[LOGIN_ENHANCEMENT.md](./LOGIN_ENHANCEMENT.md)** - 登录功能增强
+- **[CAMELCASE_UNIFICATION.md](./CAMELCASE_UNIFICATION.md)** - 驼峰命名统一
+- **[TARGET_TYPE_ENHANCEMENT.md](./TARGET_TYPE_ENHANCEMENT.md)** - 目标类型增强
+
+### 📋 项目文档
+
+#### 项目结构和变更记录
+- **[FILE_ORGANIZATION.md](./FILE_ORGANIZATION.md)** - 项目文件结构说明
+- **[PORT_CHANGE_SUMMARY.md](./PORT_CHANGE_SUMMARY.md)** - 端口配置变更记录
+- **[ICON_GENERATOR_REMOVAL_SUMMARY.md](./ICON_GENERATOR_REMOVAL_SUMMARY.md)** - 图标生成器删除记录
+- **[DOCUMENTATION_REORGANIZATION.md](./DOCUMENTATION_REORGANIZATION.md)** - 文档重新组织总结
+
+#### 功能规划和开发路线
+- **[FEATURE_ROADMAP.md](./FEATURE_ROADMAP.md)** - 功能清单与开发路线图
+  - 已有功能详细清单
+  - 待开发功能优先级
+  - 功能完成度统计
+  - 开发建议和技术栈选择
+- **[FEATURE_OVERVIEW.md](./FEATURE_OVERVIEW.md)** - 功能概览（快速了解项目状态）
+  - 项目状态总览表
+  - 已完成核心功能
+  - 待开发重点功能
+  - 开发建议和快速开始
 
 ## 📖 快速导航
 
 ### 🎯 新用户入门
-1. **[README-USER-CHAT.md](./README-USER-CHAT.md)** - AI聊天功能使用指南
+1. **[README_USER_CHAT.md](./README_USER_CHAT.md)** - AI聊天功能使用指南
 2. **[LOCAL_AI_SETUP.md](./LOCAL_AI_SETUP.md)** - 本地AI服务配置
 3. **[OPENROUTER_SETUP.md](./OPENROUTER_SETUP.md)** - OpenRouter服务配置
 
 ### 🔧 开发者指南
 1. **[CHAT_API_STRUCTURE.md](./CHAT_API_STRUCTURE.md)** - API架构理解
-2. **[user-api.md](./user-api.md)** - 用户管理API
-3. **[role-api.md](./role-api.md)** - 角色管理API
-4. **[menu-api.md](./menu-api.md)** - 菜单管理API
+2. **[USER_API.md](./USER_API.md)** - 用户管理API
+3. **[ROLE_API.md](./ROLE_API.md)** - 角色管理API
+4. **[MENU_API.md](./MENU_API.md)** - 菜单管理API
+
+### 🧪 测试指南
+1. **[TEST_STRUCTURE.md](./TEST_STRUCTURE.md)** - 测试文件组织
+2. **[PUSH_TEST_PLATFORM_GUIDE.md](./PUSH_TEST_PLATFORM_GUIDE.md)** - 推送测试指南
 
 ### 🚀 部署运维
 1. **[DOCKER_README.md](./DOCKER_README.md)** - Docker部署
 2. **[OPENROUTER_SETUP.md](./OPENROUTER_SETUP.md)** - 云服务配置
 3. **[PUSH_TROUBLESHOOTING.md](./PUSH_TROUBLESHOOTING.md)** - 问题排查
+
+### 📋 项目维护
+1. **[FEATURE_OVERVIEW.md](./FEATURE_OVERVIEW.md)** - 功能概览（快速了解）
+2. **[FEATURE_ROADMAP.md](./FEATURE_ROADMAP.md)** - 功能清单与开发路线
+3. **[FILE_ORGANIZATION.md](./FILE_ORGANIZATION.md)** - 项目结构说明
+4. **[PORT_CHANGE_SUMMARY.md](./PORT_CHANGE_SUMMARY.md)** - 配置变更记录
+5. **[ICON_GENERATOR_REMOVAL_SUMMARY.md](./ICON_GENERATOR_REMOVAL_SUMMARY.md)** - 功能删除记录
 
 ## 📝 文档维护
 

@@ -131,7 +131,7 @@ const executePush = async (pushTask, targetUserIds) => {
 
 #### 1. 使用测试页面
 
-访问 `http://localhost:3000/pusher-test.html` 进行测试：
+访问 `http://localhost:8888/pusher-test.html` 进行测试：
 
 1. 输入用户ID
 2. 点击"连接"按钮

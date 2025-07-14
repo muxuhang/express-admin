@@ -1,4 +1,5 @@
 import mongoose from 'mongoose'
+import { formatDateTime } from '../utils/dateFormatter.js'
 
 const pushTaskSchema = new mongoose.Schema({
   // 基本信息
@@ -45,12 +46,17 @@ const pushTaskSchema = new mongoose.Schema({
     type: Date,
     validate: {
       validator: function(value) {
+        // 如果是定时推送模式但没有设置时间，返回false
         if (this.pushMode === 'scheduled' && !value) {
           return false
         }
-        if (value && value <= new Date()) {
-          return false
+        
+        // 只有在设置scheduledTime值时才验证时间
+        // 避免在系统更新任务状态时触发验证
+        if (value && this.isModified('scheduledTime')) {
+          return value > new Date()
         }
+        
         return true
       },
       message: '定时推送时间必须大于当前时间'
@@ -86,8 +92,8 @@ const pushTaskSchema = new mongoose.Schema({
     },
     executedCount: {
       type: Number,
-      default: 1,
-      min: [1, '执行次数不能小于1'],
+      default: 0,  // 初始执行次数为0
+      min: [0, '执行次数不能为负数'],  // 修改最小值验证
       max: [100, '执行次数不能超过100'],
       validate: {
         validator: function(value) {
@@ -98,7 +104,9 @@ const pushTaskSchema = new mongoose.Schema({
     },
     maxExecutions: {
       type: Number,
-      min: [1, '最大执行次数必须大于0']
+      required: [true, '循环任务必须设置最大执行次数'],
+      min: [1, '最大执行次数必须大于0'],
+      max: [1000, '最大执行次数不能超过1000']
     }
   },
   
@@ -214,7 +222,16 @@ const pushTaskSchema = new mongoose.Schema({
       type: Number,
       default: 0
     },
-    errorMessage: String
+    errorMessage: String,
+    // 添加执行次数信息
+    executionCount: {
+      type: Number,
+      description: '当前执行次数'
+    },
+    maxExecutions: {
+      type: Number,
+      description: '最大执行次数'
+    }
   }],
   
   // 统计信息
@@ -261,14 +278,7 @@ const pushTaskSchema = new mongoose.Schema({
 // 虚拟字段：格式化后的定时时间
 pushTaskSchema.virtual('formattedScheduledTime').get(function() {
   if (this.scheduledTime) {
-    return this.scheduledTime.toLocaleString('zh-CN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
-    })
+    return formatDateTime(this.scheduledTime)
   }
   return null
 })
@@ -276,13 +286,7 @@ pushTaskSchema.virtual('formattedScheduledTime').get(function() {
 // 虚拟字段：下次执行时间
 pushTaskSchema.virtual('formattedNextExecutionTime').get(function() {
   if (this.recurringConfig?.nextExecutionTime) {
-    return this.recurringConfig.nextExecutionTime.toLocaleString('zh-CN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
+    return formatDateTime(this.recurringConfig.nextExecutionTime)
   }
   return null
 })
@@ -341,7 +345,7 @@ pushTaskSchema.statics.getActiveRecurringTasks = function() {
   return this.find({
     pushMode: 'recurring',
     status: 'active',
-    pushStatus: { $in: ['draft', 'sending'] },
+    pushStatus: { $in: ['draft', 'sending'] }, // 只查询未完成的任务
     'recurringConfig.nextExecutionTime': { $lte: new Date() }
   }).populate('createdBy', 'username email')
 }
@@ -355,7 +359,21 @@ pushTaskSchema.methods.addExecutionRecord = function(record) {
   // 注意：执行次数的递增现在在服务层处理，这里不再重复递增
   // 这样可以确保执行次数的准确性和持久化
   
-  return this.save()
+  // 使用findByIdAndUpdate避免触发验证器，但不更新pushStatus字段
+  return this.constructor.findByIdAndUpdate(
+    this._id,
+    {
+      $push: { executionHistory: record },
+      lastExecutedAt: record.executionTime,
+      $inc: { totalSent: record.sentCount || 0 },
+      updatedAt: new Date()
+    },
+    { 
+      new: true,
+      // 确保不更新pushStatus字段
+      runValidators: false
+    }
+  )
 }
 
 // 实例方法：计算下次执行时间

@@ -25,12 +25,12 @@
  * 启动的服务：
  * - Ollama AI 模型容器
  * - 其他 Docker 服务（如果有）
- * - Express 应用服务器（端口 3000）
+ * - Express 应用服务器（端口 8888）
  * 
  * 注意事项：
  * - 首次运行可能需要下载 Docker 镜像
  * - AI 模型首次使用时会自动下载
- * - 确保端口 3000 和 11434 未被占用
+ * - 确保端口 8888 和 11434 未被占用
  * - 建议在启动前关闭其他占用资源的应用
  */
 
@@ -99,7 +99,7 @@ function checkOllamaModel() {
 function startApplication() {
   try {
     console.log('📱 启动应用服务器...');
-    console.log('应用将在 http://localhost:3000 启动');
+    console.log('应用将在 http://localhost:8888 启动');
     console.log('按 Ctrl+C 停止服务器\n');
     execSync('npm start', { stdio: 'inherit' });
   } catch (error) {

@@ -169,6 +169,23 @@ function toggleSuccessNotificationFields() {
   safeSetDisplay('successNotificationConfig', notifyOnSuccess ? 'block' : 'none')
 }
 
+// 时间格式化函数
+function formatDateTime(date) {
+  if (!date) return ''
+  
+  const d = new Date(date)
+  if (isNaN(d.getTime())) return ''
+  
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  const hours = String(d.getHours()).padStart(2, '0')
+  const minutes = String(d.getMinutes()).padStart(2, '0')
+  const seconds = String(d.getSeconds()).padStart(2, '0')
+  
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
+}
+
 // 连接 Pusher
 function connect() {
   try {
@@ -349,7 +366,7 @@ function buildPushData() {
     if (!scheduledTime) {
       throw new Error('定时推送必须设置推送时间')
     }
-    data.scheduledTime = new Date(scheduledTime).toISOString()
+    data.scheduledTime = formatDateTime(new Date(scheduledTime))
   } else if (data.pushMode === 'recurring') {
     const recurringTypeElement = document.getElementById('recurringType')
     const executedCountElement = document.getElementById('executedCount')
@@ -481,7 +498,7 @@ function testSimplePush() {
 
   // 设置默认值
   pushTitle.value = '快速测试推送'
-  pushContent.value = `这是一条快速测试推送消息，发送时间: ${new Date().toLocaleString()}`
+  pushContent.value = `这是一条快速测试推送消息，发送时间: ${formatDateTime(new Date())}`
   pushDescription.value = '快速测试推送功能'
   pushType.value = 'notification'
   pushMode.value = 'immediate'
@@ -509,7 +526,7 @@ function testSuccessNotification() {
 
   // 设置默认值
   pushTitle.value = '成功通知测试推送'
-  pushContent.value = `这是一条测试推送消息，将发送成功通知，发送时间: ${new Date().toLocaleString()}`
+  pushContent.value = `这是一条测试推送消息，将发送成功通知，发送时间: ${formatDateTime(new Date())}`
   pushDescription.value = '测试推送成功通知功能'
   pushType.value = 'notification'
   pushMode.value = 'immediate'
@@ -582,7 +599,7 @@ function displayTasks(tasks) {
       <h4>${task.title} <span class="task-status ${task.status}">${task.status}</span></h4>
       <p><strong>内容:</strong> ${task.content}</p>
       <p><strong>类型:</strong> ${task.type} | <strong>方式:</strong> ${task.pushMode} | <strong>目标:</strong> ${task.targetType}</p>
-      <p><strong>状态:</strong> ${task.pushStatus} | <strong>发送数:</strong> ${task.totalSent || 0} | <strong>创建时间:</strong> ${new Date(task.createdAt).toLocaleString()}</p>
+      <p><strong>状态:</strong> ${task.pushStatus} | <strong>发送数:</strong> ${task.totalSent || 0} | <strong>创建时间:</strong> ${formatDateTime(task.createdAt)}</p>
       ${task.description ? `<p><strong>描述:</strong> ${task.description}</p>` : ''}
     </div>
   `).join('')

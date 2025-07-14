@@ -23,7 +23,7 @@
 OPENROUTER_API_KEY=your-openrouter-api-key
 
 # 应用配置
-APP_URL=http://localhost:3000
+APP_URL=http://localhost:8888
 ```
 
 ### 3. 可用的免费模型

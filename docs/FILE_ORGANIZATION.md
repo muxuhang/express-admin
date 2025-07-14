@@ -8,17 +8,38 @@
 
 ```
 express-admin/
-├── 📚 docs/                    # 📖 项目文档
+├── 📚 docs/                    # 项目文档
 │   ├── README.md              # 文档索引
-│   ├── README-USER-CHAT.md    # 用户聊天功能文档
+│   ├── README_USER_CHAT.md    # 用户聊天功能文档
 │   ├── LOCAL_AI_SETUP.md      # 本地AI配置指南
 │   ├── OPENROUTER_SETUP.md    # OpenRouter配置指南
-│   ├── user-api.md            # 用户管理API
-│   ├── role-api.md            # 角色管理API
-│   ├── menu-api.md            # 菜单管理API
-│   ├── pusher-api.md          # 推送API文档
+│   ├── CHAT_API_STRUCTURE.md  # 聊天API架构
+│   ├── SMART_SERVICE_DETECTION.md  # 智能服务检测
+│   ├── HISTORY_LOGIC.md       # 历史记录逻辑
+│   ├── DATA_STRUCTURE_COMPARISON.md  # 数据结构对比
+│   ├── USER_API.md            # 用户管理API
+│   ├── ROLE_API.md            # 角色管理API
+│   ├── MENU_API.md            # 菜单管理API
+│   ├── PUSHER_API.md          # 推送API文档
+│   ├── PUSHER_API_SIMPLE.md   # 推送API简化文档
+│   ├── PUSH_OPTIMIZATION_SUMMARY.md  # 推送优化总结
+│   ├── PUSH_TEST_PLATFORM_GUIDE.md  # 推送测试平台
+│   ├── PUSH_TROUBLESHOOTING.md  # 推送问题排查
+│   ├── PUSH_SUCCESS_NOTIFICATION.md  # 推送成功通知
+│   ├── RECURRING_PUSH_STATUS.md  # 循环推送状态
+│   ├── RECURRING_PUSH_FIX.md  # 循环推送修复
+│   ├── ROLE_MENUS_API.md      # 角色菜单API
+│   ├── LOGIN_ENHANCEMENT.md   # 登录功能增强
+│   ├── CAMELCASE_UNIFICATION.md  # 驼峰命名统一
+│   ├── TARGET_TYPE_ENHANCEMENT.md  # 目标类型增强
+│   ├── MODELS_API.md          # 模型API
 │   ├── DOCKER_README.md       # Docker部署指南
-│   └── ...                    # 其他文档
+│   ├── RETRY_ERROR_HANDLING.md  # 重试错误处理
+│   ├── TEST_STRUCTURE.md      # 测试文件结构
+│   ├── FILE_ORGANIZATION.md   # 本文档
+│   ├── PORT_CHANGE_SUMMARY.md # 端口变更记录
+│   ├── ICON_GENERATOR_REMOVAL_SUMMARY.md  # 图标生成器删除记录
+│   └── DOCUMENTATION_REORGANIZATION.md  # 文档重新组织总结
 ├── 🧪 tests/                   # 🧪 测试文件
 │   ├── README.md              # 测试文件索引
 │   ├── test-user-chat-api.js  # 用户聊天API测试
@@ -40,40 +61,53 @@ express-admin/
 └── 🚀 start-*.sh              # 🚀 启动脚本
 ```
 
-## 📋 整理内容
+## 📚 文档文件
 
-### 📚 docs/ 文件夹
-**包含所有项目文档，按功能分类：**
-
-#### 核心功能文档
-- `README-USER-CHAT.md` - AI聊天功能完整说明
-- `LOCAL_AI_SETUP.md` - 本地AI服务配置
-- `OPENROUTER_SETUP.md` - OpenRouter服务配置
-- `MODELS_API.md` - 模型API接口
-
-#### 系统架构文档
-- `CHAT_API_STRUCTURE.md` - 聊天API架构
-- `SMART_SERVICE_DETECTION.md` - 智能服务检测
-- `HISTORY_LOGIC.md` - 历史记录逻辑
+### 核心功能文档
+- `README_USER_CHAT.md` - AI聊天功能完整说明
+- `LOCAL_AI_SETUP.md` - 本地AI服务配置指南
+- `OPENROUTER_SETUP.md` - OpenRouter服务配置指南
+- `CHAT_API_STRUCTURE.md` - 聊天API架构说明
+- `SMART_SERVICE_DETECTION.md` - 智能服务检测机制
+- `HISTORY_LOGIC.md` - 历史记录逻辑说明
 - `DATA_STRUCTURE_COMPARISON.md` - 数据结构对比
 
-#### 用户管理文档
-- `user-api.md` - 用户管理API
-- `role-api.md` - 角色管理API
-- `menu-api.md` - 菜单管理API
+### API文档
+- `USER_API.md` - 用户管理API
+- `ROLE_API.md` - 角色管理API
+- `MENU_API.md` - 菜单管理API
+- `PUSHER_API.md` - 推送API完整文档
+- `PUSHER_API_SIMPLE.md` - 推送API简化文档
 - `ROLE_MENUS_API.md` - 角色菜单API
+- `MODELS_API.md` - 模型API接口文档
 
-#### 推送系统文档
-- `pusher-api.md` - 推送API完整文档
-- `pusher-api-simple.md` - 推送API简化文档
-- `PUSH_TROUBLESHOOTING.md` - 推送问题排查
-- `PUSH_TEST_PLATFORM_GUIDE.md` - 推送测试指南
+### 推送系统文档
+- `PUSH_OPTIMIZATION_SUMMARY.md` - 推送优化总结
+- `PUSH_TEST_PLATFORM_GUIDE.md` - 推送测试平台指南
+- `PUSH_TROUBLESHOOTING.md` - 推送问题排查指南
+- `PUSH_SUCCESS_NOTIFICATION.md` - 推送成功通知文档
+- `RECURRING_PUSH_STATUS.md` - 循环推送状态文档
+- `RECURRING_PUSH_FIX.md` - 循环推送修复文档
 
-#### 部署运维文档
+### 系统增强文档
+- `LOGIN_ENHANCEMENT.md` - 登录功能增强
+- `CAMELCASE_UNIFICATION.md` - 驼峰命名统一
+- `TARGET_TYPE_ENHANCEMENT.md` - 目标类型增强
+
+### 部署和运维文档
 - `DOCKER_README.md` - Docker部署指南
-- `RETRY_ERROR_HANDLING.md` - 错误处理机制
+- `RETRY_ERROR_HANDLING.md` - 重试错误处理机制
 
-### 🧪 tests/ 文件夹
+### 测试文档
+- `TEST_STRUCTURE.md` - 测试文件结构说明
+
+### 项目文档
+- `FILE_ORGANIZATION.md` - 本文档
+- `PORT_CHANGE_SUMMARY.md` - 端口变更记录
+- `ICON_GENERATOR_REMOVAL_SUMMARY.md` - 图标生成器删除记录
+- `DOCUMENTATION_REORGANIZATION.md` - 文档重新组织总结
+
+## 🧪 tests/ 文件夹
 **包含所有测试文件，按功能分类：**
 
 #### AI聊天功能测试
@@ -128,8 +162,23 @@ express-admin/
 cat docs/README.md
 
 # 查看特定功能文档
-cat docs/README-USER-CHAT.md
+cat docs/README_USER_CHAT.md
 cat docs/LOCAL_AI_SETUP.md
+
+# 查看用户聊天功能文档
+cat docs/README_USER_CHAT.md
+
+# 查看API文档
+cat docs/USER_API.md
+cat docs/ROLE_API.md
+cat docs/MENU_API.md
+
+# 查看推送系统文档
+cat docs/PUSHER_API.md
+cat docs/PUSH_TROUBLESHOOTING.md
+
+# 查看部署文档
+cat docs/DOCKER_README.md
 ```
 
 ### 🧪 运行测试

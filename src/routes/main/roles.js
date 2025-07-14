@@ -1,9 +1,9 @@
 import express from 'express'
 import jwt from 'jsonwebtoken'
-import Role from '../models/role.js'
-import User from '../models/user.js'
-import Menu from '../models/menu.js'
-import authLogin from '../middleware/authLogin.js'
+import Role from '../../models/role.js'
+import User from '../../models/user.js'
+import Menu from '../../models/menu.js'
+import authLogin from '../../middleware/authLogin.js'
 import mongoose from 'mongoose'
 
 const router = express.Router()
@@ -202,7 +202,7 @@ router.post('/api/roles/init', authLogin, async (req, res) => {
       })
     }
 
-    const { initDefaultRoles } = await import('../models/role.js')
+    const { initDefaultRoles } = await import('../../models/role.js')
     await initDefaultRoles()
 
     // 获取初始化后的角色列表

@@ -1,7 +1,7 @@
 import express from 'express'
-import Menu from '../models/menu.js'
-import handleError from '../utils/handleError.js'
-import authLogin from '../middleware/authLogin.js'
+import Menu from '../../models/menu.js'
+import handleError from '../../utils/handleError.js'
+import authLogin from '../../middleware/authLogin.js'
 
 const router = express.Router()
 

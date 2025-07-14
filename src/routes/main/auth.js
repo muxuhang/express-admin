@@ -1,9 +1,9 @@
 import express from 'express'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
-import User from '../models/user.js'
-import LoginLog from '../models/loginLog.js'
-import handleError from '../utils/handleError.js'
+import User from '../../models/user.js'
+import LoginLog from '../../models/loginLog.js'
+import handleError from '../../utils/handleError.js'
 
 const router = express.Router()
 

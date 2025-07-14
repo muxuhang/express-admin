@@ -4,6 +4,8 @@
  * 这个文件展示了如何使用 Pusher API 的各种功能
  */
 
+import { formatDateTime } from './src/utils/dateFormatter.js'
+
 /*
 * @author muxuhang
 * @date 2025-06-27 14:15:00
@@ -13,7 +15,7 @@
 // 推送功能使用示例
 
 // 基础配置
-const BASE_URL = 'http://localhost:3000'
+const BASE_URL = 'http://localhost:8888'
 const token = 'your-jwt-token'
 
 // 通用请求函数
@@ -114,7 +116,7 @@ async function scheduledPush() {
         channel: 'reminders',
         event: 'reminder',
         pushMode: 'scheduled',
-        scheduledTime: tomorrow.toISOString(),
+        scheduledTime: formatDateTime(tomorrow),
         targetType: 'all'
       })
     })
@@ -223,7 +225,7 @@ async function getPushStats() {
     const startDate = new Date()
     startDate.setDate(startDate.getDate() - 7) // 最近7天
     
-    const result = await makeRequest(`/api/pusher/stats?startDate=${startDate.toISOString()}&endDate=${new Date().toISOString()}`)
+    const result = await makeRequest(`/api/pusher/stats?startDate=${formatDateTime(startDate)}&endDate=${formatDateTime(new Date())}`)
     console.log('推送统计信息:', result.data)
   } catch (error) {
     console.error('获取推送统计失败:', error.message)
@@ -264,7 +266,7 @@ async function complexPush() {
         channel: 'system-announcements',
         event: 'maintenance',
         pushMode: 'scheduled',
-        scheduledTime: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(), // 2小时后
+        scheduledTime: formatDateTime(new Date(Date.now() + 2 * 60 * 60 * 1000)), // 2小时后
         targetType: 'role',
         targetRoleIds: ['admin', 'manager', 'user']
       })

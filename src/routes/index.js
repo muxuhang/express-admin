@@ -1,11 +1,13 @@
-import login from './login.js'
-import users from './users.js'
-import roles from './roles.js'
-import permissions from './permissions.js'
-import files from './files.js'
-import pusher from './pusher.js'
-import chat from './chat.js'
-import menus from './menus.js'
-import articles from './articles.js'
+import login from './main/login.js'
+import users from './main/users.js'
+import roles from './main/roles.js'
+import permissions from './main/permissions.js'
+import files from './main/files.js'
+import pusher from './main/pusher.js'
+import chat from './main/chat.js'
+import images from './main/images.js'
+import menus from './main/menus.js'
+import articles from './main/articles.js'
+import pages from './main/pages.js'
 
-export default [login, users, roles, permissions, files, pusher, chat, menus, articles]
+export default [login, users, roles, permissions, files, pusher, chat, images, menus, articles, pages]

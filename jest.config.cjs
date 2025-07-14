@@ -12,10 +12,12 @@ module.exports = {
   // 模块文件扩展名
   moduleFileExtensions: ['js', 'json'],
   
-  // 测试文件匹配模式
+  // 测试文件匹配模式 - 更新为新的目录结构
   testMatch: [
     '<rootDir>/src/**/__tests__/**/*.js',
-    '<rootDir>/src/**/?(*.)+(spec|test).js'
+    '<rootDir>/src/**/?(*.)+(spec|test).js',
+    '<rootDir>/tests/unit/**/*.js',
+    '<rootDir>/tests/integration/**/*.js'
   ],
   
   // 覆盖率收集
@@ -28,7 +30,8 @@ module.exports = {
     '!src/views/**',
     '!src/config/**',
     '!bin/**',
-    '!scripts/**'
+    '!scripts/**',
+    '!tests/**' // 排除测试目录
   ],
   
   // 覆盖率报告格式
@@ -37,18 +40,18 @@ module.exports = {
   // 覆盖率目录
   coverageDirectory: 'coverage',
   
-  // 覆盖率阈值
+  // 覆盖率阈值 - 提高阈值
   coverageThreshold: {
     global: {
-      branches: 5,
-      functions: 5,
-      lines: 5,
-      statements: 5
+      branches: 20,
+      functions: 20,
+      lines: 20,
+      statements: 20
     }
   },
   
   // 测试超时时间
-  testTimeout: 10000,
+  testTimeout: 15000,
   
   // 设置文件 - 根据测试类型选择不同的设置
   setupFilesAfterEnv: [
@@ -69,7 +72,9 @@ module.exports = {
   testPathIgnorePatterns: [
     '/node_modules/',
     '/public/',
-    '/coverage/'
+    '/coverage/',
+    '/tests/manual/', // 忽略手动测试
+    '/tests/scripts/' // 忽略脚本文件
   ],
   
   // 转换忽略模式
@@ -84,5 +89,23 @@ module.exports = {
   restoreMocks: true,
   
   // 详细输出
-  verbose: true
+  verbose: true,
+  
+  // 测试套件配置
+  projects: [
+    {
+      displayName: 'unit',
+      testMatch: [
+        '<rootDir>/src/**/__tests__/**/*.js',
+        '<rootDir>/tests/unit/**/*.js'
+      ]
+    },
+    {
+      displayName: 'integration',
+      testMatch: [
+        '<rootDir>/tests/integration/**/*.js'
+      ],
+      testTimeout: 30000 // 集成测试需要更长时间
+    }
+  ]
 } 

@@ -293,7 +293,97 @@ GET /api/menus-tree?status=inactive
 }
 ```
 
-### 8. 初始化默认菜单
+### 8. 批量更新菜单排序
+
+**PUT** `/api/menus-order`
+
+**功能：** 批量更新菜单的排序
+
+**请求体：**
+```json
+{
+  "menuOrders": [
+    {
+      "id": "60f7b3b3b3b3b3b3b3b3b3b3",
+      "order": 1
+    },
+    {
+      "id": "60f7b3b3b3b3b3b3b3b3b3b4", 
+      "order": 2
+    },
+    {
+      "id": "60f7b3b3b3b3b3b3b3b3b3b5",
+      "order": 3
+    }
+  ]
+}
+```
+
+**参数说明：**
+- `menuOrders`: 菜单排序数组
+  - `id`: 菜单ID（必填）
+  - `order`: 排序值（必填，数字类型）
+
+**功能特性：**
+1. **批量排序**：支持一次性更新多个菜单的排序
+2. **数据验证**：确保请求数据格式正确
+
+**响应示例：**
+```json
+{
+  "code": 0,
+  "message": "菜单排序更新成功",
+  "data": [
+    {
+      "_id": "60f7b3b3b3b3b3b3b3b3b3b3",
+      "label": "系统管理",
+      "key": "60f7b3b3b3b3b3b3b3b3b3b3",
+      "path": "/system",
+      "parentId": null,
+      "order": 1,
+      "icon": "SettingOutlined",
+      "status": "active",
+      "children": [
+        {
+          "_id": "60f7b3b3b3b3b3b3b3b3b3b4",
+          "label": "用户管理",
+          "key": "60f7b3b3b3b3b3b3b3b3b3b4",
+          "path": "/system/users",
+          "parentId": "60f7b3b3b3b3b3b3b3b3b3b3",
+          "order": 1,
+          "icon": "UserOutlined",
+          "status": "active",
+          "children": []
+        }
+      ]
+    }
+  ]
+}
+```
+
+**使用示例：**
+
+```javascript
+// 批量更新菜单排序
+{
+  "menuOrders": [
+    {
+      "id": "菜单ID1",
+      "order": 1
+    },
+    {
+      "id": "菜单ID2", 
+      "order": 2
+    },
+    {
+      "id": "菜单ID3",
+      "order": 3
+    }
+  ]
+}
+```
+
+### 9. 初始化默认菜单
 
 **POST** `/api/menusInit`
 
@@ -345,6 +435,7 @@ GET /api/menus-tree?status=inactive
 2. **不能将自己设为父菜单**: 防止循环引用
 3. **该菜单下有子菜单，无法删除**: 删除前需要先删除所有子菜单
 4. **只有管理员可以初始化默认菜单**: 初始化接口需要管理员权限
+5. **菜单排序数据格式错误**: 每个菜单项必须包含 id 和 order 字段
 
 ## 使用示例
 

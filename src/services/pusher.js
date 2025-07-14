@@ -1,6 +1,7 @@
 import Pusher from 'pusher'
 import PushTask from '../models/pushTask.js'
 import User from '../models/user.js'
+import { getCurrentDateTime, formatDateTime } from '../utils/dateFormatter.js'
 
 // 创建 Pusher 实例
 const pusher = new Pusher({
@@ -164,6 +165,15 @@ const recurringPush = async (pushData, userId, username) => {
       throw new Error('循环推送必须配置间隔时间或每日推送时间')
     }
     
+    // 验证最大执行次数
+    if (!recurringConfig.maxExecutions || recurringConfig.maxExecutions < 1) {
+      throw new Error('循环推送必须设置最大执行次数，且必须大于0')
+    }
+    
+    if (recurringConfig.maxExecutions > 1000) {
+      throw new Error('最大执行次数不能超过1000')
+    }
+    
     // 计算下次推送时间
     const nextExecutionTime = calculateNextPushTime(recurringConfig)
     
@@ -177,7 +187,7 @@ const recurringPush = async (pushData, userId, username) => {
       recurringConfig: {
         ...recurringConfig,
         nextExecutionTime,
-        executedCount: recurringConfig.executedCount || 1
+        executedCount: 0  // 初始执行次数为0，第一次执行时变为1
       },
       targetType,
       targetUserIds,
@@ -234,7 +244,7 @@ const executePush = async (pushTask, targetUserIds) => {
       title,
       content,
       from: 'server',
-      timestamp: new Date().toISOString(),
+      timestamp: getCurrentDateTime(),
       targetUserIds
     }
     
@@ -320,7 +330,7 @@ const sendSuccessNotification = async (title, content, userId, username) => {
       content,
       type: 'success_notification',
       from: 'system',
-      timestamp: new Date().toISOString(),
+      timestamp: getCurrentDateTime(),
       targetUserId: userId,
       createdBy: username
     }
@@ -643,15 +653,9 @@ const executeScheduledTasks = async () => {
           }
         }
         
-        // 如果推送成功，延迟重置为draft状态，让前端能看到sent状态
-        if (result.success) {
-          setTimeout(async () => {
-            await PushTask.findByIdAndUpdate(task._id, {
-              pushStatus: 'draft',
-              updatedAt: new Date()
-            })
-          }, 2000) // 2秒后重置为draft
-        }
+        // 定时任务执行完成后保持sent状态，不重置为draft
+        // 这样可以避免重复执行的问题
+        console.log(`定时任务 ${task._id} 执行完成，状态: ${result.success ? 'sent' : 'failed'}`)
         
       } catch (error) {
         console.error(`执行定时任务失败: ${task._id}`, error)
@@ -683,58 +687,78 @@ const executeRecurringTasks = async () => {
     
     for (const task of tasks) {
       try {
-        // 检查是否达到最大执行次数
-        if (task.recurringConfig.maxExecutions && 
-            task.recurringConfig.executedCount >= task.recurringConfig.maxExecutions) {
-          // 达到最大执行次数，跳过执行但不自动禁用任务
-          console.log(`循环任务 ${task._id} 已达到最大执行次数 ${task.recurringConfig.maxExecutions}，跳过执行`)
+        // 重新获取任务最新状态，避免并发问题
+        const freshTask = await PushTask.findById(task._id)
+        if (!freshTask || freshTask.status !== 'active') {
+          console.log(`循环任务 ${task._id} 状态不是active，跳过执行`)
+          continue
+        }
+        
+        // 检查推送状态，确保任务没有被停止
+        if (freshTask.pushStatus === 'completed' || freshTask.pushStatus === 'failed') {
+          console.log(`循环任务 ${task._id} 推送状态为 ${freshTask.pushStatus}，跳过执行`)
+          continue
+        }
+        
+        // 加强检查是否达到最大执行次数
+        const currentExecutedCount = freshTask.recurringConfig.executedCount || 0
+        const maxExecutions = freshTask.recurringConfig.maxExecutions
+        
+        if (maxExecutions && currentExecutedCount >= maxExecutions) {
+          // 达到最大执行次数，将任务状态设置为completed并跳过执行
+          await PushTask.findByIdAndUpdate(freshTask._id, {
+            pushStatus: 'completed',
+            updatedAt: new Date()
+          })
+          console.log(`循环任务 ${freshTask._id} 已达到最大执行次数 ${maxExecutions}，任务已完成`)
           continue
         }
         
         // 更新推送状态为发送中（如果当前不是sending状态）
-        if (task.pushStatus !== 'sending') {
-          await PushTask.findByIdAndUpdate(task._id, {
+        if (freshTask.pushStatus !== 'sending') {
+          await PushTask.findByIdAndUpdate(freshTask._id, {
             pushStatus: 'sending'
           })
         }
         
         // 获取目标用户
         const targetUsers = await getTargetUserIds(
-          task.targetUserIds, 
-          task.targetRoleIds, 
-          task.targetType
+          freshTask.targetUserIds, 
+          freshTask.targetRoleIds, 
+          freshTask.targetType
         )
         
         // 执行推送
-        const result = await executePush(task, targetUsers)
+        const result = await executePush(freshTask, targetUsers)
         
         // 计算下次执行时间（在执行记录之前计算，避免影响当前执行）
-        const nextExecutionTime = task.calculateNextExecutionTime()
+        const nextExecutionTime = freshTask.calculateNextExecutionTime()
         
         // 更新执行次数和下次执行时间
-        const newExecutedCount = (task.recurringConfig.executedCount || 0) + 1
+        const newExecutedCount = currentExecutedCount + 1
         
         // 检查是否达到最大执行次数
-        const shouldComplete = task.recurringConfig.maxExecutions && 
-                              newExecutedCount >= task.recurringConfig.maxExecutions
+        const shouldComplete = maxExecutions && newExecutedCount >= maxExecutions
         
-        // 添加执行记录
-        await task.addExecutionRecord({
+        // 添加执行记录（包含总次数信息）
+        await freshTask.addExecutionRecord({
           executionTime: new Date(),
           status: result.success ? 'success' : 'failed',
           sentCount: result.sentCount,
           failedCount: result.failedCount,
-          errorMessage: result.error
+          errorMessage: result.error,
+          executionCount: newExecutedCount,
+          maxExecutions: maxExecutions
         })
         
         // 如果推送成功且启用了成功通知，发送成功通知
-        if (result.success && task.notifyOnSuccess && task.successNotificationTitle && task.successNotificationContent) {
+        if (result.success && freshTask.notifyOnSuccess && freshTask.successNotificationTitle && freshTask.successNotificationContent) {
           try {
             await sendSuccessNotification(
-              task.successNotificationTitle, 
-              task.successNotificationContent, 
-              task.createdBy._id, 
-              task.createdByUsername
+              freshTask.successNotificationTitle, 
+              freshTask.successNotificationContent, 
+              freshTask.createdBy._id, 
+              freshTask.createdByUsername
             )
           } catch (notificationError) {
             console.error('发送循环任务成功通知失败:', notificationError)
@@ -745,33 +769,33 @@ const executeRecurringTasks = async () => {
         // 更新任务状态
         if (nextExecutionTime && !shouldComplete) {
           // 还有下次执行，保持sending状态，更新下次执行时间和执行次数
-          await PushTask.findByIdAndUpdate(task._id, {
+          await PushTask.findByIdAndUpdate(freshTask._id, {
             'recurringConfig.nextExecutionTime': nextExecutionTime,
             'recurringConfig.executedCount': newExecutedCount,
             pushStatus: 'sending', // 保持推送中状态
-            totalSent: task.totalSent + result.sentCount,
+            totalSent: freshTask.totalSent + result.sentCount,
             updatedAt: new Date()
           })
           
-          console.log(`循环任务 ${task._id} 执行完成，已执行 ${newExecutedCount} 次，下次执行时间: ${nextExecutionTime}`)
+          console.log(`循环任务 ${freshTask._id} 执行完成，已执行 ${newExecutedCount}/${maxExecutions || '∞'} 次，下次执行时间: ${formatDateTime(nextExecutionTime)}`)
         } else if (shouldComplete) {
-          // 达到最大执行次数，完成任务，但不自动禁用
-          await PushTask.findByIdAndUpdate(task._id, {
-            pushStatus: result.success ? 'sent' : 'failed', // 最后一次执行，设置为最终状态
+          // 达到最大执行次数，完成任务，设置为completed状态
+          await PushTask.findByIdAndUpdate(freshTask._id, {
+            pushStatus: 'completed', // 使用completed状态表示循环任务已完成
             'recurringConfig.executedCount': newExecutedCount,
-            totalSent: task.totalSent + result.sentCount,
+            totalSent: freshTask.totalSent + result.sentCount,
             updatedAt: new Date()
           })
           
-          console.log(`循环任务 ${task._id} 已完成，总共执行 ${newExecutedCount} 次`)
+          console.log(`循环任务 ${freshTask._id} 已完成，总共执行 ${newExecutedCount}/${maxExecutions} 次`)
         } else {
           // 无法计算下次执行时间，标记为失败
-          await PushTask.findByIdAndUpdate(task._id, {
+          await PushTask.findByIdAndUpdate(freshTask._id, {
             pushStatus: 'failed',
             'recurringConfig.executedCount': newExecutedCount,
             updatedAt: new Date()
           })
-          console.error(`循环任务 ${task._id} 无法计算下次执行时间`)
+          console.error(`循环任务 ${freshTask._id} 无法计算下次执行时间`)
         }
         
       } catch (error) {
@@ -798,6 +822,48 @@ const executeRecurringTasks = async () => {
   }
 }
 
+// 重置定时任务状态（允许重新执行）
+const resetScheduledTask = async (taskId, userId, role) => {
+  try {
+    // 构建查询条件
+    const query = { _id: taskId }
+    if (role !== 'admin') {
+      query.createdBy = userId
+    }
+    
+    // 检查任务是否存在且有权限编辑
+    const existingTask = await PushTask.findOne(query)
+    if (!existingTask) {
+      return null
+    }
+    
+    // 只允许重置定时任务
+    if (existingTask.pushMode !== 'scheduled') {
+      throw new Error('只能重置定时任务状态')
+    }
+    
+    // 检查任务是否已经执行过
+    if (existingTask.pushStatus !== 'sent' && existingTask.pushStatus !== 'failed') {
+      throw new Error('只能重置已执行的任务状态')
+    }
+    
+    // 检查定时时间是否已过期
+    if (existingTask.scheduledTime <= new Date()) {
+      throw new Error('定时时间已过期，无法重新执行')
+    }
+    
+    // 重置任务状态
+    const updatedTask = await PushTask.findByIdAndUpdate(taskId, {
+      pushStatus: 'draft',
+      updatedAt: new Date()
+    }, { new: true })
+    
+    return updatedTask
+  } catch (error) {
+    throw error
+  }
+}
+
 export default {
   immediatePush,
   scheduledPush,
@@ -812,5 +878,6 @@ export default {
   updateTaskStatus,
   getPushStats,
   executeScheduledTasks,
-  executeRecurringTasks
+  executeRecurringTasks,
+  resetScheduledTask
 } 

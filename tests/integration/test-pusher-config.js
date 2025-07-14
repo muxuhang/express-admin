@@ -1,5 +1,6 @@
 import dotenv from 'dotenv'
 import Pusher from 'pusher'
+import { formatDateTime } from '../src/utils/dateFormatter.js'
 
 // 加载环境变量
 dotenv.config()
@@ -37,7 +38,7 @@ try {
   console.log('🧪 测试推送功能...')
   await pusher.trigger('system-notifications', 'test', {
     message: '这是一条测试消息',
-    timestamp: new Date().toISOString()
+    timestamp: formatDateTime(new Date())
   })
   
   console.log('✅ 推送测试成功')

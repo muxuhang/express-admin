@@ -1,6 +1,7 @@
 import mongoose from 'mongoose'
 import PushTask from '../src/models/pushTask.js'
 import pusherService from '../src/services/pusher.js'
+import { formatDateTime } from '../src/utils/dateFormatter.js'
 
 // 连接数据库
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://root:example@localhost:27017/admin?authSource=admin')
@@ -28,13 +29,13 @@ const testRecurringStatus = async () => {
       console.log(`推送状态: ${task.pushStatus}`)
       console.log(`执行次数: ${task.recurringConfig?.executedCount || 0}`)
       console.log(`最大执行次数: ${task.recurringConfig?.maxExecutions || '无限制'}`)
-      console.log(`下次执行时间: ${task.recurringConfig?.nextExecutionTime || '无'}`)
+      console.log(`下次执行时间: ${task.recurringConfig?.nextExecutionTime ? formatDateTime(task.recurringConfig.nextExecutionTime) : '无'}`)
       console.log(`执行历史数量: ${task.executionHistory?.length || 0}`)
       
       // 显示最近的执行记录
       if (task.executionHistory && task.executionHistory.length > 0) {
         const latestRecord = task.executionHistory[task.executionHistory.length - 1]
-        console.log(`最近执行: ${latestRecord.executionTime}`)
+        console.log(`最近执行: ${formatDateTime(latestRecord.executionTime)}`)
         console.log(`执行结果: ${latestRecord.status}`)
         console.log(`发送数量: ${latestRecord.sentCount}`)
       }
@@ -94,7 +95,7 @@ const testRecurringStatus = async () => {
       console.log(`  状态: ${task.status}`)
       console.log(`  推送状态: ${task.pushStatus}`)
       console.log(`  执行次数: ${task.recurringConfig?.executedCount || 0}`)
-      console.log(`  下次执行: ${task.recurringConfig?.nextExecutionTime || '无'}`)
+      console.log(`  下次执行: ${task.recurringConfig?.nextExecutionTime ? formatDateTime(task.recurringConfig.nextExecutionTime) : '无'}`)
     }
     
   } catch (error) {

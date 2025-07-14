@@ -103,7 +103,7 @@ const connectWithRetry = async () => {
       connectionState.isConnecting = false
       connectionState.lastError = null
       console.log('数据库连接成功')
-      const port = process.env.PORT || 3000
+      const port = process.env.PORT || 8888
       console.log(`接口地址: http://localhost:${port}`)
       
       // 重置重试计数

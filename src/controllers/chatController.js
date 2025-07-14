@@ -1,6 +1,7 @@
 import aiServiceManager from '../services/aiServiceManager.js'
 import { validationResult } from 'express-validator'
 import mongoose from 'mongoose'
+import { getCurrentDateTime } from '../utils/dateFormatter.js'
 
 class ChatController {
   // 检查数据库连接状态
@@ -389,7 +390,7 @@ class ChatController {
         code: 0,
         data: {
           userId: userId,
-          createdAt: new Date().toISOString(),
+          createdAt: getCurrentDateTime(),
         },
         message: '用户ID生成成功',
       })
