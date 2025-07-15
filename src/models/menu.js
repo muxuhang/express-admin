@@ -52,7 +52,7 @@ MenuSchema.pre('save', function (next) {
 
 // 保存前自动生成 key 字段（如果未提供）
 MenuSchema.pre('save', function (next) {
-  if (!this.key) {
+  if (!this.key && this._id) {
     this.key = this._id.toString()
   }
   next()

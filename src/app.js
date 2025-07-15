@@ -15,6 +15,8 @@ import helmet from 'helmet'
 import rateLimit from 'express-rate-limit'
 import Menu from './models/menu.js'
 import pusherService from './services/pusher.js'
+import { configureStatisticsMiddleware } from './middleware/statistics.js'
+import StatisticsService from './services/statistics.js'
 
 // 兼容 Jest、Babel、Node 原生环境的 __filename/__dirname
 let __filename, __dirname
@@ -49,6 +51,9 @@ const initializeApp = async () => {
   
   // 启动推送任务调度器
   startPushTaskScheduler()
+  
+  // 启动统计数据清理调度器
+  StatisticsService.startCleanupScheduler()
 }
 
 // 启动推送任务调度器
@@ -124,6 +129,9 @@ app.use(express.urlencoded({ extended: false }))
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
 app.use(cookieParser())
+
+// 配置统计中间件
+configureStatisticsMiddleware(app)
 
 // 明确指定静态文件目录
 app.use(
