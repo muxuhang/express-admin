@@ -23,7 +23,7 @@
 
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
-import User from '../models/user.js';
+import User from '../src/models/user.js';
 import dotenv from 'dotenv';
 
 // 加载环境变量

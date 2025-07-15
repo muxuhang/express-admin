@@ -8,5 +8,6 @@ import chat from './chat.js'
 import menus from './menus.js'
 import articles from './articles.js'
 import pages from './pages.js'
+import statistics from './statistics.js'
 
-export default [login, users, roles, permissions, files, pusher, chat, menus, articles, pages]
+export default [login, users, roles, permissions, files, pusher, chat, menus, articles, pages, statistics]

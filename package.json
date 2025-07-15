@@ -24,6 +24,7 @@
     "test:run:coverage": "node scripts/run-tests.js --coverage",
     "test:run:ci": "node scripts/run-tests.js --ci",
     "test:openrouter": "babel-node tests/integration/test-openrouter.js",
+    "test:statistics": "babel-node scripts/test-statistics.js",
     "create-admin": "babel-node scripts/create-admin.js",
     "setup-env": "babel-node scripts/setup-env.js",
     "setup-ollama": "babel-node scripts/setup-ollama.js",
@@ -31,6 +32,7 @@
     "reduce-lag": "babel-node scripts/reduce-lag.js",
     "fix-recurring-tasks": "babel-node scripts/fix-recurring-tasks.js",
     "test-recurring-status": "babel-node scripts/test-recurring-status.js",
+    "generate-fake-stats": "node scripts/generate-fake-statistics.js",
     "docs:generate": "apidoc -i src/ -o docs/api/",
     "docs:serve": "apidoc -i src/ -o docs/api/ && serve docs/api/",
     "api:generate": "node scripts/generate-api-docs.js"

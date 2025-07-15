@@ -218,17 +218,29 @@ const getTargetUserIds = async (targetUserIds, targetRoleIds, targetType) => {
   if (targetType === 'all') {
     // 获取所有用户
     const allUsers = await User.find({ status: 'active' }).select('_id')
-    allUsers.forEach(user => userIds.add(user._id.toString()))
+    allUsers.forEach(user => {
+      if (user._id) {
+        userIds.add(user._id.toString())
+      }
+    })
   } else if (targetType === 'specific' && targetUserIds?.length > 0) {
     // 指定用户
-    targetUserIds.forEach(userId => userIds.add(userId.toString()))
+    targetUserIds.forEach(userId => {
+      if (userId) {
+        userIds.add(userId.toString())
+      }
+    })
   } else if (targetType === 'role' && targetRoleIds?.length > 0) {
     // 指定角色
     const roleUsers = await User.find({ 
       role: { $in: targetRoleIds }, 
       status: 'active' 
     }).select('_id')
-    roleUsers.forEach(user => userIds.add(user._id.toString()))
+    roleUsers.forEach(user => {
+      if (user._id) {
+        userIds.add(user._id.toString())
+      }
+    })
   }
   
   return Array.from(userIds)
