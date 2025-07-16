@@ -142,6 +142,9 @@ class OpenRouterService {
       const cancelToken = `${userId}_${Date.now()}`
       this.cancelTokens.set(userId, cancelToken)
       
+      // 记录开始时间
+      const startTime = Date.now()
+      
       // 获取或创建 sessionId
       let finalSessionId = sessionId
       
@@ -174,7 +177,7 @@ class OpenRouterService {
       } catch (error) {
         console.log('无法获取会话详情，使用默认值')
       }
-      
+
       // 存储用户消息（可选，如果数据库不可用则跳过）
       try {
         await chatHistoryService.saveUserMessage(userId, finalSessionId, message, 'openrouter', modelName, messageIndex)
@@ -344,6 +347,10 @@ class OpenRouterService {
         reader.releaseLock()
       }
 
+      // 计算响应时间
+      const responseTime = Date.now() - startTime
+      console.log(`AI响应完成，总耗时: ${responseTime}ms，共${chunkCount}个数据块`)
+
       // 保存对话历史
       if (fullResponse) {
         history.push({ role: 'user', content: message })
@@ -360,6 +367,7 @@ class OpenRouterService {
         try {
           await chatHistoryService.saveAssistantMessage(userId, finalSessionId, fullResponse, 'openrouter', modelName, {
             chunkCount,
+            responseTime,
             status: 'completed',
             messageIndex: messageIndex + 1
           })

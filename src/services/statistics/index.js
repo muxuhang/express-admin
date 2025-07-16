@@ -1,9 +1,9 @@
-import ActivityRecorder from './statistics/activityRecorder.js'
-import UserStatsService from './statistics/userStatsService.js'
-import SystemStatsService from './statistics/systemStatsService.js'
-import DataManager from './statistics/dataManager.js'
-import ChatStatsService from './statistics/chatStatsService.js'
-import PathNormalizer from './statistics/pathNormalizer.js'
+import ActivityRecorder from './activityRecorder.js'
+import UserStatsService from './userStatsService.js'
+import SystemStatsService from './systemStatsService.js'
+import DataManager from './dataManager.js'
+import ChatStatsService from './chatStatsService.js'
+import PathNormalizer from './pathNormalizer.js'
 
 /**
  * 统计服务主类
@@ -65,7 +65,7 @@ class StatisticsService {
       ])
 
       // 获取所有用户的最后访问时间
-      const Statistics = (await import('../models/statistics.js')).default
+      const Statistics = (await import('../../models/statistics.js')).default
       const allUsersLastActivity = await Statistics.aggregate([
         {
           $group: {
