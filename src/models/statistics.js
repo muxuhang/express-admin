@@ -145,7 +145,7 @@ StatisticsSchema.statics.getUserStats = async function(userId, startDate, endDat
         totalResponseTime: { $sum: '$responseTime' },
         errors: {
           $sum: {
-            $cond: [{ $ne: ['$statusCode', 200] }, 1, 0]
+            $cond: [{ $gte: ['$statusCode', 400] }, 1, 0]
           }
         }
       }
@@ -193,7 +193,7 @@ StatisticsSchema.statics.getSystemStats = async function(startDate, endDate) {
         avgResponseTime: { $avg: '$responseTime' },
         errors: {
           $sum: {
-            $cond: [{ $ne: ['$statusCode', 200] }, 1, 0]
+            $cond: [{ $gte: ['$statusCode', 400] }, 1, 0]
           }
         }
       }
@@ -287,7 +287,7 @@ StatisticsSchema.statics.getApiPerformance = async function(startDate, endDate) 
         maxResponseTime: { $max: '$responseTime' },
         errors: {
           $sum: {
-            $cond: [{ $ne: ['$statusCode', 200] }, 1, 0]
+            $cond: [{ $gte: ['$statusCode', 400] }, 1, 0]
           }
         },
         uniqueUsers: { $addToSet: '$userId' }

@@ -464,4 +464,221 @@ router.delete(
   }
 )
 
+/**
+ * 获取AI聊天统计概览
+ * GET /api/statistics/chat/overview
+ */
+router.get(
+  '/api/statistics/chat/overview',
+  verifyToken,
+  checkRole(['admin']),
+  [
+    query('startDate').optional().isISO8601().withMessage('开始日期格式不正确'),
+    query('endDate').optional().isISO8601().withMessage('结束日期格式不正确'),
+  ],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req)
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          code: 1,
+          message: '参数验证失败',
+          errors: errors.array(),
+        })
+      }
+
+      const { startDate, endDate } = req.query
+      const stats = await StatisticsService.getChatOverview(startDate, endDate)
+      
+      res.json({
+        code: 0,
+        message: '获取AI聊天统计概览成功',
+        data: stats
+      })
+    } catch (error) {
+      console.error('获取AI聊天统计概览失败:', error)
+      res.status(500).json({
+        code: 1,
+        message: '获取AI聊天统计概览失败',
+        error: error.message
+      })
+    }
+  }
+)
+
+/**
+ * 获取AI聊天用户统计
+ * GET /api/statistics/chat/users
+ */
+router.get(
+  '/api/statistics/chat/users',
+  verifyToken,
+  checkRole(['admin']),
+  [
+    query('startDate').optional().isISO8601().withMessage('开始日期格式不正确'),
+    query('endDate').optional().isISO8601().withMessage('结束日期格式不正确'),
+    query('page').optional().isInt({ min: 1 }).withMessage('页码必须是正整数'),
+    query('limit').optional().isInt({ min: 1, max: 100 }).withMessage('每页数量必须在1-100之间'),
+  ],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req)
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          code: 1,
+          message: '参数验证失败',
+          errors: errors.array(),
+        })
+      }
+
+      const { startDate, endDate, page = 1, limit = 10 } = req.query
+      const stats = await StatisticsService.getChatUsersStats(startDate, endDate, page, limit)
+      
+      res.json({
+        code: 0,
+        message: '获取AI聊天用户统计成功',
+        data: {
+          total: stats.total,
+          page: parseInt(page),
+          limit: parseInt(limit),
+          list: stats.list
+        }
+      })
+    } catch (error) {
+      console.error('获取AI聊天用户统计失败:', error)
+      res.status(500).json({
+        code: 1,
+        message: '获取AI聊天用户统计失败',
+        error: error.message
+      })
+    }
+  }
+)
+
+/**
+ * 获取AI聊天服务统计
+ * GET /api/statistics/chat/services
+ */
+router.get(
+  '/api/statistics/chat/services',
+  verifyToken,
+  checkRole(['admin']),
+  [
+    query('startDate').optional().isISO8601().withMessage('开始日期格式不正确'),
+    query('endDate').optional().isISO8601().withMessage('结束日期格式不正确'),
+  ],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req)
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          code: 1,
+          message: '参数验证失败',
+          errors: errors.array(),
+        })
+      }
+
+      const { startDate, endDate } = req.query
+      const stats = await StatisticsService.getChatServicesStats(startDate, endDate)
+      
+      res.json({
+        code: 0,
+        message: '获取AI聊天服务统计成功',
+        data: stats
+      })
+    } catch (error) {
+      console.error('获取AI聊天服务统计失败:', error)
+      res.status(500).json({
+        code: 1,
+        message: '获取AI聊天服务统计失败',
+        error: error.message
+      })
+    }
+  }
+)
+
+/**
+ * 获取AI聊天模型统计
+ * GET /api/statistics/chat/models
+ */
+router.get(
+  '/api/statistics/chat/models',
+  verifyToken,
+  checkRole(['admin']),
+  [
+    query('startDate').optional().isISO8601().withMessage('开始日期格式不正确'),
+    query('endDate').optional().isISO8601().withMessage('结束日期格式不正确'),
+  ],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req)
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          code: 1,
+          message: '参数验证失败',
+          errors: errors.array(),
+        })
+      }
+
+      const { startDate, endDate } = req.query
+      const stats = await StatisticsService.getChatModelsStats(startDate, endDate)
+      
+      res.json({
+        code: 0,
+        message: '获取AI聊天模型统计成功',
+        data: stats
+      })
+    } catch (error) {
+      console.error('获取AI聊天模型统计失败:', error)
+      res.status(500).json({
+        code: 1,
+        message: '获取AI聊天模型统计失败',
+        error: error.message
+      })
+    }
+  }
+)
+
+/**
+ * 获取AI聊天性能统计
+ * GET /api/statistics/chat/performance
+ */
+router.get(
+  '/api/statistics/chat/performance',
+  verifyToken,
+  checkRole(['admin']),
+  [
+    query('startDate').optional().isISO8601().withMessage('开始日期格式不正确'),
+    query('endDate').optional().isISO8601().withMessage('结束日期格式不正确'),
+  ],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req)
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          code: 1,
+          message: '参数验证失败',
+          errors: errors.array(),
+        })
+      }
+
+      const { startDate, endDate } = req.query
+      const stats = await StatisticsService.getChatPerformanceStats(startDate, endDate)
+      
+      res.json({
+        code: 0,
+        message: '获取AI聊天性能统计成功',
+        data: stats
+      })
+    } catch (error) {
+      console.error('获取AI聊天性能统计失败:', error)
+      res.status(500).json({
+        code: 1,
+        message: '获取AI聊天性能统计失败',
+        error: error.message
+      })
+    }
+  }
+)
+
 export default router
