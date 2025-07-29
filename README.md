@@ -1,10 +1,10 @@
 # Express Admin - AI聊天管理系统
 
-一个基于Express.js的现代化AI聊天管理系统，支持本地AI和云端AI服务，提供完整的用户管理、角色权限、推送通知等功能。
+一个基于Express.js的现代化AI聊天管理系统，支持云端AI服务，提供完整的用户管理、角色权限、推送通知等功能。
 
 ## 🚀 核心特性
 
-- 🤖 **多AI服务支持** - 本地Ollama + OpenRouter云端服务
+- 🤖 **AI服务支持** - OpenRouter云端服务
 - 💬 **智能聊天系统** - 流式响应、会话管理、历史记录
 - 👥 **用户权限管理** - 角色、菜单、权限控制
 - 📱 **推送通知系统** - 实时消息推送
@@ -18,7 +18,6 @@ express-admin/
 ├── 📚 docs/                    # 项目文档
 │   ├── README.md              # 文档索引
 │   ├── README_USER_CHAT.md    # 用户聊天功能文档
-│   ├── LOCAL_AI_SETUP.md      # 本地AI配置指南
 │   ├── OPENROUTER_SETUP.md    # OpenRouter配置指南
 │   └── ...                    # 其他文档
 ├── 🧪 tests/                   # 测试文件
@@ -84,7 +83,6 @@ npm run test:manual
 ### 🎯 新用户入门
 - **[项目文档](./docs/README.md)** - 完整的文档索引
 - **[用户聊天功能](./docs/README_USER_CHAT.md)** - AI聊天使用指南
-- **[本地AI配置](./docs/LOCAL_AI_SETUP.md)** - Ollama服务配置
 - **[OpenRouter配置](./docs/OPENROUTER_SETUP.md)** - 云端AI服务配置
 
 ### 🔧 开发者指南
@@ -145,7 +143,6 @@ npm run test:manual        # 手动测试
 ### 服务检查
 ```bash
 # 检查AI服务
-node tests/scripts/check-ollama.js
 node tests/scripts/check-models.js
 
 # 检查推送服务
@@ -158,7 +155,7 @@ node tests/scripts/check-tasks.js
 - **无需登录** - 通过用户ID识别用户
 - **会话管理** - 支持多会话和会话历史
 - **流式响应** - 实时显示AI回复
-- **多服务支持** - 本地Ollama + OpenRouter
+- **AI服务支持** - OpenRouter云端服务
 
 ### 👥 用户管理系统
 - **用户管理** - 用户CRUD操作
@@ -174,7 +171,7 @@ node tests/scripts/check-tasks.js
 
 - **后端**: Node.js + Express.js
 - **数据库**: MongoDB + Mongoose
-- **AI服务**: Ollama (本地) + OpenRouter (云端)
+- **AI服务**: OpenRouter (云端)
 - **推送**: Pusher + WebSocket
 - **部署**: Docker + Docker Compose
 - **测试**: Jest + 自定义测试脚本

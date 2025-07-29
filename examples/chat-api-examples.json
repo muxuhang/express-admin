@@ -163,21 +163,6 @@
       }
     },
     "data_structures": {
-      "local_ai_format": {
-        "description": "本地AI (Ollama) 数据格式",
-        "stream_chunk": {
-          "message": {
-            "content": "文本内容"
-          },
-          "done": false
-        },
-        "final_chunk": {
-          "message": {
-            "content": ""
-          },
-          "done": true
-        }
-      },
       "openrouter_format": {
         "description": "OpenRouter 数据格式",
         "stream_chunk": {
@@ -198,22 +183,6 @@
       }
     },
     "model_data_structures": {
-      "local_models": {
-        "description": "本地AI模型数据结构",
-        "example": [
-          {
-            "name": "llama3.2:3b",
-            "size": 1234567890,
-            "modified_at": "2024-01-01T00:00:00Z",
-            "digest": "sha256:abc123...",
-            "details": {
-              "format": "gguf",
-              "family": "qwen",
-              "parameter_size": "7b"
-            }
-          }
-        ]
-      },
       "openrouter_models": {
         "description": "OpenRouter模型数据结构",
         "example": [
@@ -256,16 +225,6 @@
         "code": 0,
         "data": {
           "status": {
-            "local": {
-              "available": true,
-              "currentModel": {
-                "name": "llama3.2:3b",
-                "description": "当前使用的本地模型",
-                "type": "local"
-              },
-              "availableModels": 1,
-              "displayName": "本地AI (Ollama)"
-            },
             "openrouter": {
               "available": true,
               "currentModel": "mistralai/mistral-7b-instruct",
@@ -276,11 +235,6 @@
           "currentService": "openrouter",
           "availableServices": [
             {
-              "name": "local",
-              "displayName": "本地AI (Ollama)",
-              "description": "使用本地Ollama服务，需要安装和配置Ollama"
-            },
-            {
               "name": "openrouter",
               "displayName": "OpenRouter (免费模型)",
               "description": "使用OpenRouter提供的免费AI模型，需要API密钥"
@@ -288,6 +242,40 @@
           ]
         },
         "message": "获取服务状态成功"
+      }
+    },
+    "error_responses": {
+      "service_unavailable": {
+        "description": "服务不可用错误",
+        "example": {
+          "code": 503,
+          "message": "OpenRouter服务不可用，请检查API密钥配置",
+          "error": "OpenRouter 连接失败: 未配置OPENROUTER_API_KEY环境变量"
+        }
+      },
+      "model_not_found": {
+        "description": "模型不存在错误",
+        "example": {
+          "code": 400,
+          "message": "OpenRouter 请求失败: 400 mistral-7b-instruct is not a valid model ID",
+          "error": "模型不可用"
+        }
+      },
+      "rate_limit_exceeded": {
+        "description": "API调用频率超限",
+        "example": {
+          "code": 429,
+          "message": "API调用频率超限，请稍后重试",
+          "error": "rate limit exceeded"
+        }
+      },
+      "timeout_error": {
+        "description": "请求超时错误",
+        "example": {
+          "code": 504,
+          "message": "AI服务连接超时，请稍后重试",
+          "error": "fetch failed"
+        }
       }
     }
   },
@@ -316,8 +304,7 @@
       "description": "服务不可用",
       "examples": [
         "AI服务不可用，请检查服务配置",
-        "OpenRouter服务不可用，请检查API密钥配置",
-        "本地AI服务不可用，请检查Ollama服务状态"
+        "OpenRouter服务不可用，请检查API密钥配置"
       ]
     },
     "504": {

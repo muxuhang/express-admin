@@ -22,7 +22,6 @@
  * - 技术参数调整
  * 
  * 立即可执行的命令：
- * - 重启 Ollama 容器
  * - 清理 Docker 缓存
  * - 查看容器日志
  * - 监控资源使用
@@ -72,7 +71,7 @@ function checkDockerResources() {
   try {
     console.log('\n🐳 Docker 资源检查:');
     
-    const containerStats = execSync('docker stats ollama --no-stream --format "table {{.Container}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.MemPerc}}"', { encoding: 'utf8' });
+    const containerStats = execSync('docker stats --no-stream --format "table {{.Container}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.MemPerc}}"', { encoding: 'utf8' });
     console.log(containerStats);
     
   } catch (error) {
@@ -113,10 +112,9 @@ function provideOptimizationTips() {
 // 提供立即可执行的命令
 function provideImmediateActions() {
   console.log('\n🚀 立即可执行的优化命令:');
-  console.log('• 重启 Ollama 容器: docker-compose restart ollama');
   console.log('• 清理 Docker 缓存: docker system prune -f');
-  console.log('• 查看容器日志: docker logs -f ollama');
-  console.log('• 监控资源使用: docker stats ollama');
+  console.log('• 查看容器日志: docker logs -f');
+  console.log('• 监控资源使用: docker stats');
   console.log('• 清理对话历史: 通过 API 调用 /api/chat/history DELETE');
 }
 

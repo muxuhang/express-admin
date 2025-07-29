@@ -63,7 +63,7 @@ Express Admin 是一个基于Express.js的现代化AI聊天管理系统，包含
 - ✅ **会话管理** - 支持多会话和会话历史
 - ✅ **流式响应** - 实时显示AI回复
 - ✅ **聊天历史** - 保存和查询聊天记录
-- ✅ **多AI服务支持** - 本地Ollama + OpenRouter
+- ✅ **AI服务支持** - OpenRouter云端服务
 
 #### AI服务管理
 - ✅ **智能服务检测** - 自动检测可用AI服务
@@ -130,7 +130,7 @@ Express Admin 是一个基于Express.js的现代化AI聊天管理系统，包含
 - ✅ **开发环境** - Docker Compose开发环境
 - ✅ **生产环境** - Docker Compose生产环境
 - ✅ **Nginx配置** - 反向代理配置
-- ✅ **多服务编排** - MongoDB、Ollama、后端服务、前端服务
+- ✅ **多服务编排** - MongoDB、后端服务、前端服务
 
 #### 测试支持
 - ✅ **单元测试** - Jest单元测试框架

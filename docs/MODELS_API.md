@@ -2,7 +2,7 @@
 
 ## 概述
 
-新增了获取可用模型列表的接口，用于查询当前系统中可用的 Ollama 模型。
+新增了获取可用模型列表的接口，用于查询当前系统中可用的 OpenRouter 模型。
 
 ## 接口信息
 
@@ -19,17 +19,21 @@
   "data": {
     "models": [
       {
-        "name": "llama3.2:3b",
-        "size": 4294967296,
-        "modified_at": "2024-01-01T12:00:00Z",
-        "digest": "sha256:abc123...",
-        "details": {}
+        "id": "mistralai/mistral-7b-instruct",
+        "name": "Mistral 7B Instruct",
+        "description": "免费的开源模型",
+        "context_length": 8192,
+        "pricing": {
+          "prompt": "0.00014",
+          "completion": "0.00042"
+        }
       }
     ],
     "currentModel": {
-      "name": "llama3.2:3b",
-      "description": "当前使用的本地模型",
-      "type": "local"
+      "id": "mistralai/mistral-7b-instruct",
+      "name": "Mistral 7B Instruct",
+      "description": "当前使用的模型",
+      "type": "openrouter"
     },
     "timestamp": "2024-01-01T12:00:00Z"
   },
@@ -51,19 +55,20 @@
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
+| id | string | 模型ID |
 | name | string | 模型名称 |
-| size | number | 模型大小（字节） |
-| modified_at | string | 最后修改时间 |
-| digest | string | 模型摘要 |
-| details | object | 模型详细信息 |
+| description | string | 模型描述 |
+| context_length | number | 上下文长度 |
+| pricing | object | 定价信息 |
 
 #### 当前模型对象字段
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
+| id | string | 模型ID |
 | name | string | 模型名称 |
 | description | string | 模型描述 |
-| type | string | 模型类型（local/remote） |
+| type | string | 模型类型（openrouter） |
 
 ## 使用示例
 
@@ -96,15 +101,6 @@ async function getAvailableModels() {
     console.error('请求失败:', error);
   }
 }
-
-// 格式化模型大小
-function formatBytes(bytes) {
-  if (bytes === 0) return '0 Bytes';
-  const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-}
 ```
 
 ### cURL 示例
@@ -121,9 +117,9 @@ curl -X GET http://localhost:8888/api/chat/models \
 
 | 错误代码 | 错误信息 | 解决方案 |
 |---------|---------|---------|
-| 500 | 获取模型列表失败 | 检查 Ollama 服务状态 |
+| 500 | 获取模型列表失败 | 检查 OpenRouter 服务状态 |
 | 503 | 数据库服务暂时不可用 | 检查数据库连接 |
-| 503 | Ollama 客户端未初始化 | 重启应用服务 |
+| 503 | OpenRouter 客户端未初始化 | 重启应用服务 |
 
 ### 错误响应格式
 
@@ -131,7 +127,7 @@ curl -X GET http://localhost:8888/api/chat/models \
 {
   "code": 500,
   "message": "获取模型列表失败",
-  "error": "Ollama 服务不可用"
+  "error": "OpenRouter 服务不可用"
 }
 ```
 
@@ -146,10 +142,10 @@ node test-models-api.js
 
 ### 测试场景
 
-1. **正常情况**: Ollama 服务运行，有可用模型
-2. **服务不可用**: Ollama 服务未启动
-3. **网络问题**: 无法连接到 Ollama 服务
-4. **空列表**: 没有安装任何模型
+1. **正常情况**: OpenRouter 服务运行，有可用模型
+2. **服务不可用**: OpenRouter 服务未启动
+3. **网络问题**: 无法连接到 OpenRouter 服务
+4. **空列表**: 没有可用模型
 
 ## 实现细节
 
@@ -159,24 +155,31 @@ node test-models-api.js
 // 获取可用的模型列表
 async getAvailableModels() {
   try {
-    // 确保 Ollama 客户端已初始化
+    // 确保 OpenRouter 客户端已初始化
     if (!this.isInitialized) {
       await this.initialize()
     }
 
-    if (!this.ollama) {
-      throw new Error('Ollama 客户端未初始化')
+    if (!this.apiKey) {
+      throw new Error('OpenRouter 客户端未初始化')
     }
 
-    console.log('获取 Ollama 模型列表...')
-    const response = await this.ollama.list()
+    console.log('获取 OpenRouter 模型列表...')
+    const response = await fetch('https://openrouter.ai/api/v1/models', {
+      headers: {
+        'Authorization': `Bearer ${this.apiKey}`,
+        'HTTP-Referer': process.env.APP_URL || 'http://localhost:8888',
+        'X-Title': 'Express Admin Chat'
+      }
+    })
     
-    const models = response.models.map(model => ({
+    const data = await response.json()
+    const models = data.data.map(model => ({
+      id: model.id,
       name: model.name,
-      size: model.size,
-      modified_at: model.modified_at,
-      digest: model.digest,
-      details: model.details || {}
+      description: model.description,
+      context_length: model.context_length,
+      pricing: model.pricing
     }))
 
     console.log(\`找到 \${models.length} 个可用模型\`)
@@ -233,7 +236,7 @@ router.get('/api/chat/models', chatController.getAvailableModels)
 ## 前端集成建议
 
 1. **模型选择器**: 显示可用模型列表，允许用户选择
-2. **模型信息**: 显示模型大小、更新时间等详细信息
+2. **模型信息**: 显示模型描述、上下文长度等详细信息
 3. **状态指示**: 显示当前使用的模型
 4. **错误处理**: 优雅处理服务不可用等错误情况
 5. **缓存机制**: 缓存模型列表，减少重复请求
@@ -243,7 +246,7 @@ router.get('/api/chat/models', chatController.getAvailableModels)
 ### 未来可能的扩展
 
 1. **模型切换**: 允许用户切换使用的模型
-2. **模型下载**: 提供模型下载和安装功能
-3. **模型管理**: 删除、更新模型
-4. **模型信息**: 显示更详细的模型信息（参数、性能等）
-5. **模型推荐**: 根据用户需求推荐合适的模型 
+2. **模型信息**: 显示更详细的模型信息（参数、性能等）
+3. **模型推荐**: 根据用户需求推荐合适的模型
+4. **定价信息**: 显示模型使用成本
+5. **性能对比**: 不同模型的性能对比 
