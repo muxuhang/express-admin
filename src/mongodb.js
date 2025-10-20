@@ -9,8 +9,6 @@ const MONGODB_CONFIG = {
   username: process.env.MONGODB_USER,
   password: process.env.MONGODB_PASSWORD,
   options: {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
     serverSelectionTimeoutMS: 5000,
     socketTimeoutMS: 45000,
     maxPoolSize: 5,

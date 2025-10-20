@@ -1,9 +1,15 @@
-# 使用Node.js的官方Docker镜像作为基础镜像
-FROM node:18.16.1
+# 使用Node.js的官方Docker镜像作为基础镜像（可通过构建参数覆盖）
+ARG BASE_IMAGE=node:18.16.1
+FROM ${BASE_IMAGE}
 
 # 设置工作目录
 WORKDIR /app
 
+# 复制 package.json 和 package-lock.json
+COPY package*.json ./
+
+# 安装依赖
+RUN npm install
 
 # 复制源代码
 COPY . .
