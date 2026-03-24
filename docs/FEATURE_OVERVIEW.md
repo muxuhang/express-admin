@@ -18,7 +18,7 @@
 
 ```
 项目结构：
-├── express-admin/          # 后端API服务
+├── cacti-api/          # 后端API服务
 │   ├── src/               # 后端源代码
 │   ├── docs/              # 项目文档
 │   └── tests/             # 测试文件

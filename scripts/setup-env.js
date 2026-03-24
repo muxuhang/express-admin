@@ -47,6 +47,7 @@ JWT_SECRET=your_jwt_secret_key_here_change_this_in_production
 # 服务器配置
 PORT=8888
 NODE_ENV=development
+
 `;
 
 try {

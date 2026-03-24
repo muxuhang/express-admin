@@ -120,7 +120,7 @@ class PathNormalizer {
       '/api/dashboard',
       '/api/login',
       '/api/statistics/overview',
-      '/api/chat/send'
+      '/api/profile'
     ]
 
     console.log('🧪 测试路径规范化功能...\n')

@@ -17,7 +17,7 @@ globalThis.Headers = Headers
 globalThis.Request = Request
 globalThis.Response = Response
 
-const debugServer = debug('express-admin:server')
+const debugServer = debug('cacti-api:server')
 
 /**
  * Get port from environment and store in Express.

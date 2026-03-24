@@ -2,7 +2,6 @@ import ActivityRecorder from './statistics/activityRecorder.js'
 import UserStatsService from './statistics/userStatsService.js'
 import SystemStatsService from './statistics/systemStatsService.js'
 import DataManager from './statistics/dataManager.js'
-import ChatStatsService from './statistics/chatStatsService.js'
 import PathNormalizer from './statistics/pathNormalizer.js'
 
 /**
@@ -37,13 +36,6 @@ class StatisticsService {
   static startCleanupScheduler = DataManager.startCleanupScheduler
   static generateFakeData = DataManager.generateFakeData
   static clearAllData = DataManager.clearAllData
-
-  // 聊天统计相关
-  static getChatOverview = ChatStatsService.getChatOverview
-  static getChatUsersStats = ChatStatsService.getChatUsersStats
-  static getChatServicesStats = ChatStatsService.getChatServicesStats
-  static getChatModelsStats = ChatStatsService.getChatModelsStats
-  static getChatPerformanceStats = ChatStatsService.getChatPerformanceStats
 
   // 路径规范化相关
   static hasObjectId = PathNormalizer.hasObjectId

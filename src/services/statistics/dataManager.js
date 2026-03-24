@@ -88,7 +88,6 @@ class DataManager {
         '/api/auth/logout',
         '/api/auth/register',
         '/api/push',
-        '/api/chat',
         '/api/upload'
       ]
       

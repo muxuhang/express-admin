@@ -14,7 +14,7 @@
 ## 📁 项目结构
 
 ```
-express-admin/
+cacti-api/
 ├── 📚 docs/                    # 项目文档
 │   ├── README.md              # 文档索引
 │   ├── README_USER_CHAT.md    # 用户聊天功能文档
@@ -44,7 +44,7 @@ express-admin/
 ```bash
 # 克隆项目
 git clone <repository-url>
-cd express-admin
+cd cacti-api
 
 # 安装依赖
 npm install

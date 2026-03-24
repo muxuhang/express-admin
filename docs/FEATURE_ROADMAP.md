@@ -2,13 +2,13 @@
 
 ## 📋 项目概述
 
-Express Admin 是一个基于Express.js的现代化AI聊天管理系统，包含后端API服务（express-admin）和前端管理界面（cacti-admin），支持用户管理、角色权限、AI聊天、推送通知等核心功能。
+Cacti CRM 是一个基于 Express.js 的管理系统，包含后端 API 服务（cacti-api）和前端管理界面（cacti-admin），支持用户管理、角色权限、推送通知等核心功能。
 
 ## 📁 项目架构
 
 ```
 项目结构：
-├── express-admin/          # 后端API服务
+├── cacti-api/          # 后端API服务
 │   ├── src/               # 后端源代码
 │   ├── docs/              # 项目文档
 │   └── tests/             # 测试文件
@@ -267,7 +267,7 @@ Express Admin 是一个基于Express.js的现代化AI聊天管理系统，包含
   - 添加图表库（ECharts/Ant Design Charts）
   - 添加国际化支持
 
-#### 后端技术栈（express-admin）
+#### 后端技术栈（cacti-api）
 - **当前**: Express.js + MongoDB
 - **建议增强**: 
   - 添加Redis缓存
